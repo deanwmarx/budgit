@@ -2,13 +2,14 @@
 	import Icon from '../icons/Icon.svelte';
 
 	/**
-	 * @type {{
-	 *   options?: Array<{value: string | number, label: string, icon?: string}>,
-	 *   name?: string,
-	 *   value?: string | number,
-	 *   default_value?: string | number | null
-	 * }}
+	 * @typedef {Object} Props
+	 * @property {Array<{value: string | number, label: string, icon?: string}>} [options]
+	 * @property {string} [name]
+	 * @property {string | number} [value]
+	 * @property {string | number | null} [default_value]
 	 */
+
+	/** @type {Props} */
 	let { options = [], name = 'options', value = $bindable(), default_value = null } = $props();
 
 	// Initialize value if not set
