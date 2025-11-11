@@ -1,6 +1,6 @@
 import "clsx";
 import { n as navigation, S as SCREENS } from "../../chunks/navigation.svelte.js";
-import { x as attr_class, y as stringify, z as ensure_array_like, F as attributes, G as bind_props, J as clsx } from "../../chunks/index.js";
+import { x as attr_class, y as stringify, z as ensure_array_like, F as attributes, G as bind_props, J as attr, K as clsx } from "../../chunks/index.js";
 import { Capacitor } from "@capacitor/core";
 import { SQLiteConnection, CapacitorSQLite } from "@capacitor-community/sqlite";
 import { e as escape_html } from "../../chunks/context.js";
@@ -64,6 +64,14 @@ function SettingsScreen($$renderer) {
 function MembersScreen($$renderer) {
   $$renderer.push(`<div class="p-4"><h1 class="text-2xl font-bold mb-4">Members</h1> <p class="text-gray-400">Members screen placeholder</p></div>`);
 }
+function Badge($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let { children, $$slots, $$events, ...rest } = $$props;
+    $$renderer2.push(`<div${attr_class(`inline-flex w-auto items-center gap-1.5 rounded-full bg-grey-900 px-3 py-1.5 text-sm font-medium ${stringify(rest.class)}`)}>`);
+    children($$renderer2);
+    $$renderer2.push(`<!----></div>`);
+  });
+}
 function InputLabel($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let {
@@ -80,7 +88,7 @@ function InputLabel($$renderer, $$props) {
     } = $$props;
     $$renderer2.push(`<label${attributes({
       ...rest,
-      class: ` block leading-none transition-all select-none ${stringify(rest.class ?? "")} ${stringify(disabled ? "opacity-60" : "")} ${stringify(invalid ? "text-danger-600" : "")} `
+      class: ` block text-sm leading-none transition-colors select-none ${stringify(rest.class ?? "")} ${stringify(disabled ? "pointer-events-none opacity-60" : "")} ${stringify(invalid ? "text-danger-600" : "")} `
     })}>${escape_html(text)} `);
     if (optional) {
       $$renderer2.push("<!--[-->");
@@ -121,6 +129,92 @@ function InputValidation($$renderer, $$props) {
     bind_props($$props, { disabled, invalid });
   });
 }
+function formatDateForStorage(date) {
+  return date.toISOString().split("T")[0];
+}
+function formatDate(date_string, options = {
+  day: "2-digit",
+  month: "short",
+  year: "numeric"
+}) {
+  return new Date(date_string).toLocaleDateString("en-ZA", options);
+}
+function InputDate($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let {
+      name = "date",
+      placeholder = void 0,
+      value = void 0,
+      invalid = false,
+      disabled = false,
+      required = false,
+      $$slots,
+      $$events,
+      ...rest
+    } = $$props;
+    let display_value = (() => {
+      if (!value || typeof value !== "string") return "";
+      const today = formatDateForStorage(/* @__PURE__ */ new Date());
+      const yesterday = formatDateForStorage(new Date(Date.now() - 864e5));
+      const tomorrow = formatDateForStorage(new Date(Date.now() + 864e5));
+      if (value === today) return "Today";
+      if (value === yesterday) return "Yesterday";
+      if (value === tomorrow) return "Tomorrow";
+      return formatDate(value, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+    })();
+    $$renderer2.push(`<div${attr_class(` relative w-full rounded-lg px-3 py-1.5 placeholder-grey-300 ring ring-grey-400 outline-0 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary-700 focus-within:outline-0 ${stringify(disabled ? "pointer-events-none cursor-not-allowed opacity-60" : "")} ${stringify(invalid ? "ring-danger-600! focus-within:ring-danger-600!" : "")} ${stringify(rest.class)} `)}>`);
+    if (value) {
+      $$renderer2.push("<!--[-->");
+      $$renderer2.push(`<span class="pointer-events-none">${escape_html(display_value)}</span>`);
+    } else {
+      $$renderer2.push("<!--[!-->");
+      $$renderer2.push(`<span class="pointer-events-none text-grey-300">${escape_html(placeholder)}</span>`);
+    }
+    $$renderer2.push(`<!--]--> <input type="date"${attr("name", name)}${attr("value", value)}${attr("placeholder", placeholder)}${attr("disabled", disabled, true)}${attr("required", required, true)}${attr("id", rest.id)} class="absolute top-0 left-0 h-full w-full appearance-none opacity-0"/> `);
+    Icon($$renderer2, {
+      name: "calendar",
+      class: `pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 ${stringify(!value ? "text-grey-300" : "")}`
+    });
+    $$renderer2.push(`<!----></div>`);
+    bind_props($$props, { value });
+  });
+}
+function InputOptions($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let {
+      options = [],
+      name = "options",
+      value = void 0,
+      default_value = null
+    } = $$props;
+    if (value === void 0 && default_value !== null) {
+      value = default_value;
+    } else if (value === void 0 && options.length > 0) {
+      value = options[0].value;
+    }
+    $$renderer2.push(`<div class="flex flex-nowrap gap-px overflow-hidden rounded-lg"><!--[-->`);
+    const each_array = ensure_array_like(options);
+    for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
+      let option = each_array[$$index];
+      const checked = value === option.value;
+      $$renderer2.push(`<label${attr_class(`relative flex w-full items-center gap-1.5 p-3 py-2 transition-all duration-300 ${stringify(checked ? "bg-primary-700 shadow-sm" : "bg-grey-800 active:bg-grey-700")}`)}><input type="radio" class="absolute inset-0 h-full w-full appearance-none opacity-0"${attr("name", name)}${attr("value", option.value)}${attr("checked", checked, true)}/> `);
+      if (option.icon) {
+        $$renderer2.push("<!--[-->");
+        Icon($$renderer2, { name: option.icon, class: "size-4" });
+      } else {
+        $$renderer2.push("<!--[!-->");
+      }
+      $$renderer2.push(`<!--]--> <span${attr_class(`text-sm transition-all duration-300 ${stringify(checked ? "font-medium" : "")}`)}>${escape_html(option.label)}</span></label>`);
+    }
+    $$renderer2.push(`<!--]--></div>`);
+    bind_props($$props, { value });
+  });
+}
 function InputText($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let {
@@ -145,7 +239,7 @@ function InputText($$renderer, $$props) {
         placeholder,
         disabled,
         ...rest,
-        class: ` w-full rounded-lg px-3 py-1.5 placeholder-grey-300 ring ring-grey-400 outline-0 transition-all duration-300 focus:ring-2 focus:ring-primary-700 focus:outline-0 ${stringify(disabled ? "cursor-not-allowed opacity-60" : "")} ${stringify(invalid ? "ring-danger-600! focus:ring-danger-600!" : "")} ${stringify(rest.class)} `
+        class: ` w-full rounded-lg px-3 py-1.5 placeholder-grey-300 ring ring-grey-400 outline-0 transition-all duration-300 focus:ring-2 focus:ring-primary-700 focus:outline-0 ${stringify(disabled ? "cursor-not-allowed opacity-60" : "")} ${stringify(invalid ? "pointer-events-none ring-danger-600! focus:ring-danger-600!" : "")} ${stringify(rest.class)} `
       },
       void 0,
       void 0,
@@ -156,31 +250,86 @@ function InputText($$renderer, $$props) {
   });
 }
 function BudgetsScreen($$renderer) {
-  $$renderer.push(`<div class="space-y-4 p-4"><div class="space-y-1">`);
-  InputLabel($$renderer, { for: "input-example", text: "Example Input" });
-  $$renderer.push(`<!----> `);
-  InputText($$renderer, {
-    id: "input-example",
-    placeholder: "Enter some text...",
-    focus_on_load: true
-  });
-  $$renderer.push(`<!----></div> <div class="space-y-1">`);
-  InputLabel($$renderer, {
-    for: "input-example",
-    text: "Example Input",
-    required: true,
-    invalid: true
-  });
-  $$renderer.push(`<!----> `);
-  InputText($$renderer, {
-    id: "input-example",
-    placeholder: "Enter some text...",
-    required: true,
-    invalid: true
-  });
-  $$renderer.push(`<!----> `);
-  InputValidation($$renderer, { text: "This field is required.", invalid: true });
-  $$renderer.push(`<!----></div></div>`);
+  let selected_date = "";
+  const my_options = [
+    { value: "option1", label: "Dashboard", icon: "home" },
+    { value: "option2", label: "Settings", icon: "cog" },
+    { value: "option3", label: "Profile" }
+    // No icon
+  ];
+  let selected_option = "option2";
+  let $$settled = true;
+  let $$inner_renderer;
+  function $$render_inner($$renderer2) {
+    $$renderer2.push(`<div class="space-y-4 p-4"><div class="space-y-1">`);
+    InputLabel($$renderer2, { for: "input-example", text: "Example Input" });
+    $$renderer2.push(`<!----> `);
+    InputText($$renderer2, {
+      id: "input-example",
+      placeholder: "Enter some text...",
+      focus_on_load: true
+    });
+    $$renderer2.push(`<!----></div> <div class="space-y-1">`);
+    InputLabel($$renderer2, {
+      for: "input-example",
+      text: "Example Input",
+      required: true,
+      invalid: true
+    });
+    $$renderer2.push(`<!----> `);
+    InputText($$renderer2, {
+      id: "input-example",
+      placeholder: "Enter some text...",
+      required: true,
+      invalid: true
+    });
+    $$renderer2.push(`<!----> `);
+    InputValidation($$renderer2, { text: "This field is required.", invalid: true });
+    $$renderer2.push(`<!----></div> `);
+    Badge($$renderer2, {
+      children: ($$renderer3) => {
+        Icon($$renderer3, { name: "checkmark", class: "size-4" });
+        $$renderer3.push(`<!----> Badge Component Example`);
+      },
+      $$slots: { default: true }
+    });
+    $$renderer2.push(`<!----> <div class="space-y-1">`);
+    InputLabel($$renderer2, { for: "pick-date", text: "Pick a Date" });
+    $$renderer2.push(`<!----> `);
+    InputDate($$renderer2, {
+      id: "pick-date",
+      placeholder: "Select a date",
+      get value() {
+        return selected_date;
+      },
+      set value($$value) {
+        selected_date = $$value;
+        $$settled = false;
+      }
+    });
+    $$renderer2.push(`<!----></div> <p>Selected Date: ${escape_html(selected_date)}</p> <div class="space-y-1">`);
+    InputLabel($$renderer2, { text: "Select an Option" });
+    $$renderer2.push(`<!----> `);
+    InputOptions($$renderer2, {
+      name: "example-options",
+      options: my_options,
+      default_value: "option2",
+      get value() {
+        return selected_option;
+      },
+      set value($$value) {
+        selected_option = $$value;
+        $$settled = false;
+      }
+    });
+    $$renderer2.push(`<!----></div> <p>Selected Option: ${escape_html(selected_option)}</p></div>`);
+  }
+  do {
+    $$settled = true;
+    $$inner_renderer = $$renderer.copy();
+    $$render_inner($$inner_renderer);
+  } while (!$$settled);
+  $$renderer.subsume($$inner_renderer);
 }
 const size_classes = {
   small: ["py-1", "px-1.5"].join(" "),

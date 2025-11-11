@@ -9,7 +9,7 @@
 	 * @property {string} [optional_text="(optional)"]
 	 * @property {string} [required_text="*"]
 	 * @property {string} [class]
-     * @property {string} [for]
+	 * @property {string} [for]
 	 */
 
 	/** @type {Props} */
@@ -29,8 +29,8 @@
 <label
 	{...rest}
 	class="
-		block leading-none transition-all select-none {rest.class ?? ''}
-		{disabled ? 'opacity-60' : ''}
+		block text-sm leading-none transition-colors select-none {rest.class ?? ''}
+		{disabled ? 'pointer-events-none opacity-60' : ''}
 		{invalid ? 'text-danger-600' : ''}
 	"
 >

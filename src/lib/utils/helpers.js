@@ -8,9 +8,9 @@
  * @returns {string} Formatted currency string
  */
 export function formatCurrency(cents) {
-	return `R${(cents / 100).toLocaleString('en-ZA', { 
-		minimumFractionDigits: 2, 
-		maximumFractionDigits: 2 
+	return `R${(cents / 100).toLocaleString('en-ZA', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
 	})}`;
 }
 
@@ -51,14 +51,18 @@ export function parseDateFromStorage(isoDate) {
 }
 
 /**
- * Format date for display (dd MMM yyyy)
- * @param {string} dateString - ISO date string
+ * Format date for display
+ * @param {string} date_string - ISO date string
+ * @param {Intl.DateTimeFormatOptions} [options] - Format options (defaults to dd MMM yyyy)
  * @returns {string} Formatted date string
  */
-export function formatDate(dateString) {
-	return new Date(dateString).toLocaleDateString('en-ZA', {
+export function formatDate(
+	date_string,
+	options = {
 		day: '2-digit',
 		month: 'short',
 		year: 'numeric'
-	});
+	}
+) {
+	return new Date(date_string).toLocaleDateString('en-ZA', options);
 }

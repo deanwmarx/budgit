@@ -1,6 +1,6 @@
 {
   ".svelte-kit/generated/client-optimized/app.js": {
-    "file": "_app/immutable/entry/app.Bq-yB8Cf.js",
+    "file": "_app/immutable/entry/app.Kvjg4qo3.js",
     "name": "entry/app",
     "src": ".svelte-kit/generated/client-optimized/app.js",
     "isEntry": true,
@@ -17,7 +17,7 @@
     ]
   },
   ".svelte-kit/generated/client-optimized/nodes/0.js": {
-    "file": "_app/immutable/nodes/0.CI4G0qwU.js",
+    "file": "_app/immutable/nodes/0.CptQJSZB.js",
     "name": "nodes/0",
     "src": ".svelte-kit/generated/client-optimized/nodes/0.js",
     "isEntry": true,
@@ -29,11 +29,11 @@
       "_BkKJFjph.js"
     ],
     "css": [
-      "_app/immutable/assets/0.Nt5FUZ-9.css"
+      "_app/immutable/assets/0.CrhrtbmZ.css"
     ]
   },
   ".svelte-kit/generated/client-optimized/nodes/1.js": {
-    "file": "_app/immutable/nodes/1.0A1esx5J.js",
+    "file": "_app/immutable/nodes/1.COpbVaXX.js",
     "name": "nodes/1",
     "src": ".svelte-kit/generated/client-optimized/nodes/1.js",
     "isEntry": true,
@@ -42,27 +42,27 @@
       "_DsnmJJEf.js",
       "_x0oHCbIn.js",
       "_C0WG1Ef3.js",
-      "_B07mwo98.js"
+      "_B1gyugQm.js"
     ]
   },
   ".svelte-kit/generated/client-optimized/nodes/2.js": {
-    "file": "_app/immutable/nodes/2.BchtA_qu.js",
+    "file": "_app/immutable/nodes/2.KUZ2bo55.js",
     "name": "nodes/2",
     "src": ".svelte-kit/generated/client-optimized/nodes/2.js",
     "isEntry": true,
     "imports": [
-      "_B1sgiOp4.js"
+      "_BOQhAMOo.js"
     ]
   },
-  "_B07mwo98.js": {
-    "file": "_app/immutable/chunks/B07mwo98.js",
+  "_B1gyugQm.js": {
+    "file": "_app/immutable/chunks/B1gyugQm.js",
     "name": "entry",
     "imports": [
       "_C0WG1Ef3.js"
     ]
   },
-  "_B1sgiOp4.js": {
-    "file": "_app/immutable/chunks/B1sgiOp4.js",
+  "_BOQhAMOo.js": {
+    "file": "_app/immutable/chunks/BOQhAMOo.js",
     "name": "2",
     "isDynamicEntry": true,
     "imports": [
@@ -155,30 +155,30 @@
     ]
   },
   "node_modules/@capacitor-community/sqlite/dist/esm/web.js": {
-    "file": "_app/immutable/chunks/T-2pVKLQ.js",
+    "file": "_app/immutable/chunks/DOLEB8Hj.js",
     "name": "web",
     "src": "node_modules/@capacitor-community/sqlite/dist/esm/web.js",
     "isDynamicEntry": true,
     "imports": [
-      "_B1sgiOp4.js"
+      "_BOQhAMOo.js"
     ]
   },
   "node_modules/@capacitor/app/dist/esm/web.js": {
-    "file": "_app/immutable/chunks/C13ZZU59.js",
+    "file": "_app/immutable/chunks/B5_aajYV.js",
     "name": "web",
     "src": "node_modules/@capacitor/app/dist/esm/web.js",
     "isDynamicEntry": true,
     "imports": [
-      "_B1sgiOp4.js"
+      "_BOQhAMOo.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/client/entry.js": {
-    "file": "_app/immutable/entry/start.D4f9WcFh.js",
+    "file": "_app/immutable/entry/start.B17-J5af.js",
     "name": "entry/start",
     "src": "node_modules/@sveltejs/kit/src/runtime/client/entry.js",
     "isEntry": true,
     "imports": [
-      "_B07mwo98.js"
+      "_B1gyugQm.js"
     ]
   },
   "src/lib/components/elements/icons/svg/arrow-left.svg?raw": {
