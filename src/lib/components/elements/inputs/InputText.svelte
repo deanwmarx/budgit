@@ -55,8 +55,8 @@
 	class="
 			w-full rounded-lg px-3 py-1.5 placeholder-grey-300 ring ring-grey-400 outline-0
 			transition-all duration-300 focus:ring-2 focus:ring-primary-700 focus:outline-0
-			{disabled ? 'cursor-not-allowed opacity-60' : ''}
-			{invalid ? 'pointer-events-none ring-danger-600! focus:ring-danger-600!' : ''}
+			{disabled ? 'point-events-none opacity-60' : ''}
+			{invalid ? 'ring-danger-600! focus:ring-danger-600!' : ''}
 			{rest.class}
 		"
 />

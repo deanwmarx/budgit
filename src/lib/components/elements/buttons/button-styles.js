@@ -11,14 +11,14 @@ export const button_round_size_classes = {
 };
 
 export const color_classes = {
-	primary: ['bg-primary-600', 'active:bg-primary-700', 'disabled:active:bg-primary-600'].join(' '),
+	primary: ['bg-primary-600', 'active:bg-primary-500', 'disabled:active:bg-primary-600'].join(' '),
 	secondary: [
 		'bg-secondary-700',
-		'active:bg-secondary-800',
+		'active:bg-secondary-600',
 		'disabled:active:bg-secondary-700'
 	].join(' '),
 	tertiary: ['bg-transparent', 'active:bg-secondary-700', 'disabled:active:bg-transparent'].join(
 		' '
 	),
-	danger: ['bg-danger-600', 'active:bg-danger-700', 'disabled:active:bg-danger-600'].join(' ')
+	danger: ['bg-danger-600', 'active:bg-danger-500', 'disabled:active:bg-danger-600'].join(' ')
 };

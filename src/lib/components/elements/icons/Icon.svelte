@@ -3,7 +3,7 @@
 
 	/**
 	 * @typedef {Object} Props
-	 * @property {IconName} name - The name of the icon to display
+	 * @property {string} name - The name of the icon to display
 	 * @property {string} [class] - Additional CSS classes to apply to the SVG
 	 */
 

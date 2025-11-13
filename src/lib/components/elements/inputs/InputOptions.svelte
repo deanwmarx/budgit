@@ -30,7 +30,7 @@
 		{@const checked = value === option.value}
 		<label
 			class="relative flex w-full items-center gap-1.5 p-3 py-2 transition-all duration-300 {checked
-				? 'bg-primary-700 shadow-sm'
+				? 'bg-primary-700 shadow-sm active:bg-primary-600'
 				: 'bg-grey-800 active:bg-grey-700'}"
 		>
 			<input
