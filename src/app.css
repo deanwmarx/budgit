@@ -96,4 +96,26 @@ html {
 	/* Monochrome Colors */
 	--color-black: #26272b;
 	--color-white: #f7f8f8;
+
+	/* Member Colors - Standard Palette */
+	--color-red-500: #ef4444;
+	--color-orange-500: #f97316;
+	--color-amber-500: #f59e0b;
+	--color-yellow-500: #eab308;
+	--color-lime-500: #84cc16;
+	--color-green-500: #22c55e;
+	--color-emerald-500: #10b981;
+	--color-teal-500: #14b8a6;
+	--color-cyan-500: #06b6d4;
+	--color-sky-500: #0ea5e9;
+	--color-blue-500: #3b82f6;
+	--color-indigo-500: #6366f1;
+	--color-violet-500: #8b5cf6;
+	--color-purple-500: #a855f7;
+	--color-fuchsia-500: #d946ef;
+	--color-pink-500: #ec4899;
+	--color-rose-500: #f43f5e;
+	--color-slate-500: #64748b;
+	--color-gray-500: #6b7280;
+	--color-zinc-500: #71717a;
 }

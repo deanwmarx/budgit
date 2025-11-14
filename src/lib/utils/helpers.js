@@ -66,3 +66,74 @@ export function formatDate(
 ) {
 	return new Date(date_string).toLocaleDateString('en-ZA', options);
 }
+
+/**
+ * Available member colors with simple one-word names
+ */
+export const MEMBER_COLORS = [
+	'red',
+	'orange',
+	'amber',
+	'yellow',
+	'lime',
+	'green',
+	'emerald',
+	'teal',
+	'cyan',
+	'sky',
+	'blue',
+	'indigo',
+	'violet',
+	'purple',
+	'fuchsia',
+	'pink',
+	'rose',
+	'slate',
+	'gray',
+	'zinc'
+];
+
+/**
+ * Map of color names to Tailwind CSS background classes
+ */
+const COLOR_TO_BG_CLASS = {
+	red: 'bg-red-500',
+	orange: 'bg-orange-500',
+	amber: 'bg-amber-500',
+	yellow: 'bg-yellow-500',
+	lime: 'bg-lime-500',
+	green: 'bg-green-500',
+	emerald: 'bg-emerald-500',
+	teal: 'bg-teal-500',
+	cyan: 'bg-cyan-500',
+	sky: 'bg-sky-500',
+	blue: 'bg-blue-500',
+	indigo: 'bg-indigo-500',
+	violet: 'bg-violet-500',
+	purple: 'bg-purple-500',
+	fuchsia: 'bg-fuchsia-500',
+	pink: 'bg-pink-500',
+	rose: 'bg-rose-500',
+	slate: 'bg-slate-500',
+	gray: 'bg-gray-500',
+	zinc: 'bg-zinc-500'
+};
+
+/**
+ * Get all available member colors
+ * @returns {string[]} Array of color names
+ */
+export function getMemberColors() {
+	return [...MEMBER_COLORS];
+}
+
+/**
+ * Convert a color name to Tailwind CSS background class
+ * @param {string} color_name - Color name (e.g., 'red', 'blue')
+ * @returns {string} Tailwind CSS background class (e.g., 'bg-red-500')
+ */
+export function getColorBgClass(color_name) {
+	return (
+		COLOR_TO_BG_CLASS[/** @type {keyof typeof COLOR_TO_BG_CLASS} */ (color_name)] || 'bg-gray-500'
+	);
+}

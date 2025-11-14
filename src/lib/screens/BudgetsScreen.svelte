@@ -8,6 +8,8 @@
 	import InputOptions from '$comps/elements/inputs/InputOptions.svelte';
 	import InputSlider from '$comps/elements/inputs/InputSlider.svelte';
 	import InputText from '$comps/elements/inputs/InputText.svelte';
+	import InputToggle from '$comps/elements/inputs/InputToggle.svelte';
+	import MemberSelect from '$comps/elements/members/MemberSelect.svelte';
 	import MetricAmount from '$comps/elements/metrics/MetricAmount.svelte';
 	import MetricProgress from '$comps/elements/metrics/MetricProgress.svelte';
 
@@ -20,6 +22,13 @@
 	let selected_option = $state('option2');
 	let slider_value = $state(50);
 	let amount = $state(null);
+	let toggle_state = $state(false);
+	let input_selected_option = $state('option1');
+	let input_select_options = [
+		{ value: 'john', label: 'John Smith', color: 'green' },
+		{ value: 'jane', label: 'Jane Smith', color: 'orange' },
+		{ value: 'edgar', label: 'Edgar Smith', color: 'blue' }
+	];
 </script>
 
 <div class="space-y-4 p-4">
@@ -87,4 +96,21 @@
 		<MetricProgress percentage={90} label="Groceries" icon="cart" />
 		<MetricProgress percentage={25} label="Petrol" icon="flame" />
 	</div>
+
+	<div class="space-y-1">
+		<InputLabel text="Toggle Example" for="toggle-example" />
+		<InputToggle id="toggle-example" bind:checked={toggle_state} />
+	</div>
+	<p>Toggle State: {toggle_state}</p>
+
+	<div class="space-y-1">
+		<InputLabel text="Select a Member" for="select-member" />
+		<MemberSelect
+			id="select-member"
+			name="select-member"
+			options={input_select_options}
+			bind:selected_option={input_selected_option}
+		/>
+	</div>
+	<p>Selected from InputSelect: {input_selected_option}</p>
 </div>
