@@ -45,7 +45,7 @@
 		type="text"
 		value={display_value}
 		oninput={handleInput}
-		class="w-[38px] rounded-xs border border-grey-600 bg-grey-900 text-center text-xs leading-none outline-none focus:border-2 focus:border-primary-700"
+		class="w-[38px] rounded-xs border border-grey-600 bg-grey-900 text-center text-xs leading-none transition-colors duration-300 outline-none focus:border-2 focus:border-primary-700"
 	/>
 </div>
 

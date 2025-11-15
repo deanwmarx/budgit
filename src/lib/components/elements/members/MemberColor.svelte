@@ -13,4 +13,6 @@
 	const bg_color_class = $derived(getColorBgClass(color));
 </script>
 
-<div class="rounded-full transition-colors duration-300 {bg_color_class} {rest.class ?? ''}"></div>
+<div
+	class="rounded-full aspect-square shadow-sm transition-colors duration-300 {bg_color_class} {rest.class ?? ''}"
+></div>

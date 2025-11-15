@@ -74,6 +74,16 @@
 							<Icon name="wallet" class="size-4" />
 							Budgets
 						</button>
+						<button
+							onclick={() => navigate(SCREENS.COMPONENTS)}
+							class="flex w-full items-center gap-2 px-4 py-1.5 text-left {navigation.current_screen ===
+							SCREENS.COMPONENTS
+								? 'bg-primary-700 font-semibold'
+								: ''}"
+						>
+							<Icon name="wallet" class="size-4" />
+							Components
+						</button>
 					</div>
 				</div>
 				<div>

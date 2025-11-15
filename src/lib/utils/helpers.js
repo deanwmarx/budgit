@@ -68,6 +68,32 @@ export function formatDate(
 }
 
 /**
+ * Format date for display with relative terms (Today, Yesterday, Tomorrow)
+ * @param {string} date_string - ISO date string (YYYY-MM-DD)
+ * @returns {string} Formatted date string
+ */
+export function formatRelativeDate(date_string) {
+	const inputDate = new Date(date_string + 'T00:00:00');
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	
+	const diffTime = inputDate.getTime() - today.getTime();
+	const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+	
+	if (diffDays === 0) return 'Today';
+	if (diffDays === -1) return 'Yesterday';
+	if (diffDays === 1) return 'Tomorrow';
+	
+	// Format as "Fri, 24 Oct 2025" using the existing formatDate function
+	return formatDate(date_string, {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric'
+	});
+}
+
+/**
  * Available member colors with simple one-word names
  */
 export const MEMBER_COLORS = [

@@ -4,7 +4,7 @@
 	/**
 	 * @typedef {Object} Props
 	 * @property {string} name - The name of the icon to display
-	 * @property {string} [class] - Additional CSS classes to apply to the SVG
+	 * @property {string} class - Usually used to set the size or color of the icon (e.g., 'size-4 text-primary-700')
 	 */
 
 	/** @type {Props} */

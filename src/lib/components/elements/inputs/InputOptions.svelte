@@ -6,16 +6,13 @@
 	 * @property {Array<{value: string | number, label: string, icon?: string}>} [options]
 	 * @property {string} [name]
 	 * @property {string | number} [value]
-	 * @property {string | number | null} [default_value]
 	 */
 
 	/** @type {Props} */
-	let { options = [], name = 'options', value = $bindable(), default_value = null } = $props();
+	let { options = [], name = 'options', value = $bindable() } = $props();
 
 	// Initialize value if not set
-	if (value === undefined && default_value !== null) {
-		value = default_value;
-	} else if (value === undefined && options.length > 0) {
+	if (value === undefined && options.length > 0) {
 		value = options[0].value;
 	}
 

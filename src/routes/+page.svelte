@@ -6,7 +6,7 @@
 	import BudgetsScreen from '$lib/screens/BudgetsScreen.svelte';
 	import TransactionsScreen from '$lib/screens/TransactionsScreen.svelte';
 	import { fade } from 'svelte/transition';
-	import ButtonQuick from '$comps/elements/buttons/ButtonQuick.svelte';
+	import ComponentsScreen from '$lib/screens/ComponentsScreen.svelte';
 </script>
 
 {#if navigation.current_screen === SCREENS.DASHBOARD}
@@ -24,6 +24,10 @@
 {:else if navigation.current_screen === SCREENS.BUDGETS}
 	<div in:fade={{ duration: 300 }}>
 		<BudgetsScreen />
+	</div>
+{:else if navigation.current_screen === SCREENS.COMPONENTS}
+	<div in:fade={{ duration: 300 }}>
+		<ComponentsScreen />
 	</div>
 {:else if navigation.current_screen === SCREENS.TRANSACTIONS}
 	<div in:fade={{ duration: 300 }}>

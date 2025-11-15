@@ -1,5 +1,5 @@
 /**
- * @typedef {'create-household' | 'dashboard' | 'transactions' | 'budgets' | 'members' | 'settings'} ScreenType
+ * @typedef {'create-household' | 'dashboard' | 'transactions' | 'budgets' | 'components' | 'members' | 'settings'} ScreenType
  */
 
 /**
@@ -11,6 +11,7 @@ export const SCREENS = {
 	DASHBOARD: 'dashboard',
 	TRANSACTIONS: 'transactions',
 	BUDGETS: 'budgets',
+	COMPONENTS: 'components',
 	MEMBERS: 'members',
 	SETTINGS: 'settings'
 };

@@ -1,6 +1,6 @@
 <script>
 	import Icon from '../icons/Icon.svelte';
-	import { formatDateForStorage, formatDate } from '$lib/utils/helpers.js';
+	import { formatRelativeDate } from '$lib/utils/helpers.js';
 
 	/**
 	 * @typedef {Object} InputTextProps
@@ -27,21 +27,7 @@
 
 	let display_value = $derived.by(() => {
 		if (!value || typeof value !== 'string') return '';
-
-		const today = formatDateForStorage(new Date());
-		const yesterday = formatDateForStorage(new Date(Date.now() - 86400000));
-		const tomorrow = formatDateForStorage(new Date(Date.now() + 86400000));
-
-		if (value === today) return 'Today';
-		if (value === yesterday) return 'Yesterday';
-		if (value === tomorrow) return 'Tomorrow';
-
-		return formatDate(value, {
-			weekday: 'short',
-			day: 'numeric',
-			month: 'short',
-			year: 'numeric'
-		});
+		return formatRelativeDate(value);
 	});
 </script>
 
