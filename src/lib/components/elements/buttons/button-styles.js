@@ -20,5 +20,6 @@ export const color_classes = {
 	tertiary: ['bg-transparent', 'active:bg-secondary-700', 'disabled:active:bg-transparent'].join(
 		' '
 	),
-	danger: ['bg-danger-600', 'active:bg-danger-500', 'disabled:active:bg-danger-600'].join(' ')
+	danger: ['bg-danger-600', 'active:bg-danger-500', 'disabled:active:bg-danger-600'].join(' '),
+	transparent: ['bg-transparent', 'active:bg-secondary-700', 'disabled:active:bg-transparent'].join(' ')
 };

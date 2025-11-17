@@ -5,7 +5,7 @@
 	import FAB from '$comps/groups/FAB.svelte';
 </script>
 
-<div class="relative space-y-4 p-4">
+<div class="relative space-y-4">
 	<h1 class="mb-4 text-2xl font-bold">Transaction</h1>
 	<p class="text-gray-400">Transaction screen placeholder</p>
 
@@ -62,17 +62,4 @@
 	<ButtonRound size="large" color="danger" disabled>
 		<Icon name="trash" class="size-4" />
 	</ButtonRound>
-
-	<div class="absolute bottom-0 left-1/2 -translate-x-1/2 transform">
-		<FAB>
-			<Button color="primary">
-				<Icon name="arrows-up-down" class="size-6" />
-				Add Variable Expense
-			</Button>
-			<Button color="primary">
-				<Icon name="exclamation-triangle" class="size-6" />
-				Add Incidental Expense
-			</Button>
-		</FAB>
-	</div>
 </div>

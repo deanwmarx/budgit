@@ -16,9 +16,8 @@
 
 	/**
 	 * @typedef {Object} Props
-	 * @property {string} [name]
-	 * @property {string} [placeholder]
 	 * @property {*} [value]
+	 * @property {string} placeholder
 	 * @property {boolean} [invalid=false]
 	 * @property {boolean} [disabled=false]
 	 * @property {Option[]} [options]
@@ -29,19 +28,13 @@
 	/** @type {Props & { [key: string]: any }} */
 	let {
 		value = $bindable(''),
+		placeholder = 'Select an option',
 		invalid = false,
 		disabled = false,
 		options = [],
 		optionSnippet,
-		focus_on_load = false,
 		...rest
 	} = $props();
-
-	onMount(() => {
-		if (focus_on_load) {
-			handleOpen();
-		}
-	});
 
 	let is_open = $state(false);
 	let is_focused = $state(false);
@@ -71,9 +64,7 @@
 
 	/** @type {string} */
 	const display_text = $derived(
-		is_open
-			? (rest.placeholder ?? '')
-			: (formatted_options().find((o) => o.is_selected)?.label ?? rest.placeholder ?? '')
+		formatted_options().find((o) => o.is_selected)?.label ?? placeholder
 	);
 
 	/** @type {string | undefined} */
@@ -243,7 +234,7 @@
 			{rest.class}
 		"
 	>
-		<span class="truncate {display_text === rest.placeholder ? 'text-grey-300' : ''}">
+		<span class="truncate {display_text === placeholder ? 'text-grey-400' : ''}">
 			{display_text}
 		</span>
 		{#if selected_color}

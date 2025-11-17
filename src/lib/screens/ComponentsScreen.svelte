@@ -37,7 +37,7 @@
 	let budget_clicked = $state(false);
 </script>
 
-<div class="space-y-4 p-2">
+<div class="space-y-4">
 	<div class="space-y-1">
 		<InputLabel for="input-example" text="Example Input" />
 		<InputText id="input-example" placeholder="Enter some text..." focus_on_load={true} />

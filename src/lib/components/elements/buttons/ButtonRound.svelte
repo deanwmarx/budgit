@@ -7,7 +7,7 @@
 	 * @property {string} [title]
 	 * @property {string} [href]
 	 * @property {'small' | 'medium' | 'large'} [size]
-	 * @property {'primary' | 'secondary' | 'tertiary' | 'danger'} [color]
+	 * @property {'primary' | 'secondary' | 'tertiary' | 'danger' | 'transparent'} [color]
 	 * @property {string} [tooltip_text]
 	 * @property {'top' | 'right' | 'bottom' | 'left'} [tooltip_position]
 	 */

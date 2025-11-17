@@ -2,9 +2,7 @@
 	import ButtonQuick from '$comps/elements/buttons/ButtonQuick.svelte';
 	import { fly } from 'svelte/transition';
 
-	let { children } = $props();
-
-	let is_active = $state(false);
+	let { children, is_active=$bindable(false) } = $props();
 </script>
 
 <div class="flex flex-col items-center justify-center gap-2">
