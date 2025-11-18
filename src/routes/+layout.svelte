@@ -1,5 +1,7 @@
 <script>
 	import { navigation, SCREENS } from '$lib/navigation.svelte.js';
+	import { appState } from '$lib/appState.svelte.js';
+	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import '../app.css';
 	import Icon from '$comps/elements/icons/Icon.svelte';
@@ -14,13 +16,22 @@
 	let drawer_open = $state(false);
 	let fab_menu_is_active = $state(false);
 	let current_month = $state('2025-11');
-	const households = [
-		{ value: 'smith-household', label: 'Smith Household' },
-		{ value: 'grandpa-budget', label: "Grandpa's Budget" }
-	];
-	let default_household = $state(households[0].value);
 
-	let show_layout = $derived(navigation.current_screen !== SCREENS.CREATE_HOUSEHOLD);
+	// Derived from app state
+	let households = $derived(
+		appState.households.map((h) => ({
+			value: h.id,
+			label: h.name
+		}))
+	);
+	let default_household = $derived(appState.current_household_id || '');
+
+	let show_layout = $derived(appState.is_initialized);
+
+	onMount(async () => {
+		// Initialize app state - loads user/household from Capacitor Preferences
+		await appState.initialize();
+	});
 
 	/**
 	 * Navigate to a screen
@@ -28,6 +39,23 @@
 	 */
 	function navigate(screen) {
 		navigation.navigateTo(screen);
+		drawer_open = false;
+	}
+
+	/**
+	 * Handle household selection change
+	 * @param {Event & { currentTarget: HTMLSelectElement }} e
+	 */
+	async function handleHouseholdChange(e) {
+		const selected_id = e.currentTarget.value;
+		const selected = appState.households.find((h) => h.id === selected_id);
+		if (selected) {
+			await appState.setHousehold(selected.id, selected.name);
+		}
+	}
+
+	async function handleLogout() {
+		await appState.logout();
 		drawer_open = false;
 	}
 </script>
@@ -51,7 +79,8 @@
 					<div class="flex items-center justify-between gap-2 border-b border-grey-800 p-4">
 						<InputSelect
 							class="flex-1"
-							bind:value={default_household}
+							value={default_household}
+							onchange={handleHouseholdChange}
 							options={households}
 							placeholder="Select a household"
 						/>
@@ -100,6 +129,16 @@
 							<Icon name="wallet" class="size-4" />
 							Components
 						</button>
+						<button
+							onclick={() => navigate(SCREENS.NOTES)}
+							class="flex w-full items-center gap-2 px-4 py-1.5 text-left transition-colors duration-300 active:bg-grey-800 {navigation.current_screen ===
+							SCREENS.NOTES
+								? 'bg-primary-700 font-semibold'
+								: ''}"
+						>
+							<Icon name="wallet" class="size-4" />
+							Notes
+						</button>
 					</div>
 				</div>
 				<div>
@@ -126,7 +165,7 @@
 						</button>
 					</div>
 					<div class="p-4 text-right">
-						<button class="flex items-center gap-2">
+						<button onclick={handleLogout} class="flex items-center gap-2">
 							<Icon name="logout" class="size-4" />
 							Logout
 						</button>

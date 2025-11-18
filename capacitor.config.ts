@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.budg.app',
-  appName: 'budgapp',
+  appId: 'com.budgit.app',
+  appName: 'budgit',
   webDir: 'dist',
   server: {
     androidScheme: 'https'
