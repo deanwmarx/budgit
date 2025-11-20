@@ -1,4 +1,4 @@
-package com.example.app;
+package com.budgit.app;
 
 import android.os.Bundle;
 import android.view.View;

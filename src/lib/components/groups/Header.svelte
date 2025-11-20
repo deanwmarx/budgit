@@ -3,15 +3,27 @@
 	import ButtonRound from '$comps/elements/buttons/ButtonRound.svelte';
 	import Icon from '$comps/elements/icons/Icon.svelte';
 	import Logo from '$comps/elements/Logo.svelte';
+	import { navigation, SCREENS } from '$lib/navigation.svelte';
 
 	let { drawer_open = $bindable(false) } = $props();
+
+	/**
+	 * Navigate to a screen
+	 * @param {import('$lib/navigation.svelte.js').ScreenType} screen
+	 */
+	function navigate(screen) {
+		navigation.navigateTo(screen);
+		drawer_open = false;
+	}
 </script>
 
 <header
 	class="relative flex items-center justify-between gap-4 border-t border-t-grey-800 px-4 py-2"
 >
 	<ButtonHamburger onclick={() => (drawer_open = true)} />
-	<Logo />
+	<button class="appearance-none outline-0" onclick={() => navigate(SCREENS.DASHBOARD)}>
+		<Logo />
+	</button>
 	<ButtonRound size="large">
 		<Icon name="plus" class="size-5" />
 	</ButtonRound>

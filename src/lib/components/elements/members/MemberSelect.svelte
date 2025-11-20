@@ -36,4 +36,11 @@
 	</div>
 {/snippet}
 
-<InputSelect {...rest} {options} {optionSnippet} bind:value={selected_option} {placeholder} />
+<InputSelect
+	{...rest}
+	{options}
+	{optionSnippet}
+	bind:value={selected_option}
+	{placeholder}
+	absolute={false}
+/>

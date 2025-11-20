@@ -33,6 +33,7 @@
 		disabled = false,
 		options = [],
 		optionSnippet,
+		absolute = true,
 		...rest
 	} = $props();
 
@@ -253,7 +254,7 @@
 	{#if is_open}
 		<div
 			transition:slide={{ duration: 200, easing: quadInOut }}
-			class="dropdown-container absolute mt-1.5 max-h-[275px] w-full overflow-y-auto rounded-lg bg-black p-1 shadow-lg ring-1 ring-grey-600"
+			class="dropdown-container {absolute ? 'absolute' : ''} mt-1.5 max-h-[275px] w-full overflow-y-auto rounded-lg bg-black p-1 shadow-lg ring-1 ring-grey-600"
 			onmousedown={(e) => e.preventDefault()}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}

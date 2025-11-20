@@ -20,6 +20,7 @@ export {
 	updateHousehold,
 	deleteHousehold,
 	addMember,
+	inviteMember,
 	getMembers,
 	updateMember,
 	removeMember

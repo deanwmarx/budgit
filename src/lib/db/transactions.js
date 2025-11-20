@@ -4,15 +4,15 @@ import { getDB, trackDeviceActivity } from './connection.js';
 
 /**
  * Create a new transaction.
- * @param {string} monthId - The month ID the transaction belongs to
+ * @param {string} month_id - The month ID the transaction belongs to
  * @param {'income' | 'expense'} type - The type of transaction
- * @param {string} userId - The user ID who made the transaction
+ * @param {string} user_id - The user ID who made the transaction
  * @param {string} name - The name/description of the transaction
  * @param {number} amount - The amount in cents (non-negative)
  * @param {string} category - The category of the transaction
- * @param {string|null} budgetGroup - The budget group (if applicable)
+ * @param {string|null} budget_group - The budget group (if applicable)
  * @param {number} date - The date of the transaction (timestamp)
- * @param {string} createdBy - The user ID who created the transaction
+ * @param {string} created_by - The user ID who created the transaction
  * @returns {Promise<{id: string, monthId: string, type: string, userId: string, name: string, amount: number, category: string, budgetGroup: string|null, date: number, createdAt: number, updatedAt: number}>} The created transaction object
  */
 export async function createTransaction(
@@ -69,7 +69,7 @@ export async function createTransaction(
 
 /**
  * Get transactions for a month with limit and offset (for "load more").
- * @param {string} monthId - The month ID
+ * @param {string} month_id - The month ID
  * @param {number} limit - Number of transactions to load (default 20)
  * @param {number} offset - Number to skip (default 0)
  * @returns {Promise<Array>} Array of transaction objects

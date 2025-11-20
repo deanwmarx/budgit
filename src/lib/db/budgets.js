@@ -4,9 +4,9 @@ import { getDB, trackDeviceActivity } from './connection.js';
 
 /**
  * Create a new month.
- * @param {string} householdId - The household ID
- * @param {number} startDate - The start date timestamp
- * @param {number} endDate - The end date timestamp
+ * @param {string} household_id - The household ID
+ * @param {number} start_date - The start date timestamp
+ * @param {number} end_date - The end date timestamp
  * @returns {Promise<{id: string, householdId: string, startDate: number, endDate: number, createdAt: number, updatedAt: number}>} The created month object
  */
 export async function createMonth(household_id, start_date, end_date) {
@@ -28,7 +28,7 @@ export async function createMonth(household_id, start_date, end_date) {
 
 /**
  * Get all months for a household.
- * @param {string} householdId - The household ID
+ * @param {string} household_id - The household ID
  * @param {number} limit - Optional limit (default: all months)
  * @returns {Promise<Array<{id: string, householdId: string, startDate: number, endDate: number, createdAt: number, updatedAt: number}>>} Array of month objects
  */
@@ -62,8 +62,8 @@ export async function getMonth(id) {
 /**
  * Update a month.
  * @param {string} id - The month ID
- * @param {number} startDate - Updated start date timestamp
- * @param {number} endDate - Updated end date timestamp
+ * @param {number} start_date - Updated start date timestamp
+ * @param {number} end_date - Updated end date timestamp
  * @returns {Promise<void>}
  */
 export async function updateMonth(id, start_date, end_date) {
@@ -98,8 +98,8 @@ export async function deleteMonth(id) {
 /**
  * Create or update a budget for a month.
  * Uses UPSERT pattern since budgets have UNIQUE(monthId, groupName).
- * @param {string} monthId - The month ID
- * @param {string} groupName - The budget group name
+ * @param {string} month_id - The month ID
+ * @param {string} group_name - The budget group name
  * @param {number} amount - The budget amount (in cents)
  * @returns {Promise<{id: string, monthId: string, groupName: string, amount: number, createdAt: number, updatedAt: number}>} The created/updated budget object
  */
@@ -126,7 +126,7 @@ export async function setBudget(month_id, group_name, amount) {
 
 /**
  * Get all budgets for a month.
- * @param {string} monthId - The month ID
+ * @param {string} month_id - The month ID
  * @returns {Promise<Array<{id: string, monthId: string, groupName: string, amount: number, createdAt: number, updatedAt: number}>>} Array of budget objects
  */
 export async function getBudgets(month_id) {
@@ -142,8 +142,8 @@ export async function getBudgets(month_id) {
 
 /**
  * Get a specific budget by month and group name.
- * @param {string} monthId - The month ID
- * @param {string} groupName - The budget group name
+ * @param {string} month_id - The month ID
+ * @param {string} group_name - The budget group name
  * @returns {Promise<{id: string, monthId: string, groupName: string, amount: number, createdAt: number, updatedAt: number}|null>} The budget object or null
  */
 export async function getBudget(month_id, group_name) {
@@ -159,8 +159,8 @@ export async function getBudget(month_id, group_name) {
 
 /**
  * Delete a budget.
- * @param {string} monthId - The month ID
- * @param {string} groupName - The budget group name
+ * @param {string} month_id - The month ID
+ * @param {string} group_name - The budget group name
  * @returns {Promise<void>}
  */
 export async function deleteBudget(month_id, group_name) {

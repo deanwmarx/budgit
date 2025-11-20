@@ -11,6 +11,7 @@ const PREF_KEYS = {
 	USER_EMAIL: 'current_user_email',
 	USER_NAME: 'current_user_name',
 	HOUSEHOLD_ID: 'current_household_id',
+	LAST_HOUSEHOLD_ID: 'last_household_id',
 	HOUSEHOLD_NAME: 'current_household_name'
 };
 
@@ -29,6 +30,9 @@ class AppState {
 
 	/** @type {string | null} */
 	current_household_id = $state(null);
+
+	/** @type {string | null} */
+	last_household_id = $state(null);
 
 	/** @type {string | null} */
 	current_household_name = $state(null);
@@ -69,6 +73,12 @@ class AppState {
 			const { value: household_name } = await Preferences.get({
 				key: PREF_KEYS.HOUSEHOLD_NAME
 			});
+			
+			// Load last household ID
+			const { value: last_household_id } = await Preferences.get({ key: PREF_KEYS.LAST_HOUSEHOLD_ID });
+			if (last_household_id) {
+				this.last_household_id = last_household_id;
+			}
 
 			if (default_user_id && default_user_email && default_user_name) {
 				this.current_user_id = default_user_id;
@@ -161,6 +171,12 @@ class AppState {
 	 * Logout - clear household selection and return to household selection screen
 	 */
 	async logout() {
+		// Save current household ID as last household before clearing
+		if (this.current_household_id) {
+			this.last_household_id = this.current_household_id;
+			await Preferences.set({ key: PREF_KEYS.LAST_HOUSEHOLD_ID, value: this.current_household_id });
+		}
+		
 		this.current_household_id = null;
 		this.current_household_name = null;
 		this.is_initialized = false;

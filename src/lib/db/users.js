@@ -101,7 +101,7 @@ export async function deleteUser(id) {
 
 /**
  * Get all households that a user belongs to.
- * @param {string} userId - The user ID
+ * @param {string} user_id - The user ID
  * @returns {Promise<Array<{id: string, name: string, budgetCycleStartDay: number, role: string, color: string, joinedAt: number}>>} Array of households with member info
  */
 export async function getUserHouseholds(user_id) {
@@ -133,9 +133,9 @@ export async function getUserHouseholds(user_id) {
 /**
  * Register or update a device for a user.
  * Uses UPSERT pattern to handle re-registrations.
- * @param {string} deviceId - The unique device ID
- * @param {string} deviceName - The device name/model
- * @param {string} userId - The user ID
+ * @param {string} device_id - The unique device ID
+ * @param {string} device_name - The device name/model
+ * @param {string} user_id - The user ID
  * @returns {Promise<{deviceId: string, deviceName: string, userId: string, lastActive: number, createdAt: number, updatedAt: number}>} The device info object
  */
 export async function registerDevice(device_id, device_name, user_id) {
@@ -161,7 +161,7 @@ export async function registerDevice(device_id, device_name, user_id) {
 
 /**
  * Update device last active timestamp.
- * @param {string} deviceId - The device ID
+ * @param {string} device_id - The device ID
  * @returns {Promise<void>}
  */
 export async function updateDeviceActivity(device_id) {
@@ -179,7 +179,7 @@ export async function updateDeviceActivity(device_id) {
 
 /**
  * Get all devices for a user.
- * @param {string} userId - The user ID
+ * @param {string} user_id - The user ID
  * @returns {Promise<Array<{deviceId: string, deviceName: string, userId: string, lastActive: number, createdAt: number, updatedAt: number}>>} Array of device info objects
  */
 export async function getUserDevices(user_id) {
@@ -195,7 +195,7 @@ export async function getUserDevices(user_id) {
 
 /**
  * Get a device by ID.
- * @param {string} deviceId - The device ID
+ * @param {string} device_id - The device ID
  * @returns {Promise<{deviceId: string, deviceName: string, userId: string, lastActive: number, createdAt: number, updatedAt: number}|null>} The device info object or null
  */
 export async function getDevice(device_id) {
@@ -208,7 +208,7 @@ export async function getDevice(device_id) {
 
 /**
  * Unregister a device.
- * @param {string} deviceId - The device ID to unregister
+ * @param {string} device_id - The device ID to unregister
  * @returns {Promise<void>}
  */
 export async function unregisterDevice(device_id) {

@@ -21,7 +21,6 @@
 		optional = false,
 		optional_text = '(optional)',
 		required = false,
-		required_text = '*',
 		...rest
 	} = $props();
 </script>
@@ -37,8 +36,5 @@
 	{text}
 	{#if optional}
 		{optional_text}
-	{/if}
-	{#if required}
-		{required_text}
 	{/if}
 </label>

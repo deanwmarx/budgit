@@ -1,4 +1,5 @@
 import { getDB, trackDeviceActivity } from './connection.js';
+import { createUser, getUserByEmail, updateUser } from './users.js';
 
 // CRUD functions for households and members table
 
@@ -77,7 +78,7 @@ export async function deleteHousehold(id) {
  * Add a member to a household.
  * @param {string} household_id - The household ID
  * @param {string} user_id - The user ID
- * @param {string} role - Member role (e.g., 'owner', 'admin', 'member')
+ * @param {string} role - Member role (e.g., 'admin', 'member')
  * @param {string} color - Display color for the member
  * @returns {Promise<{householdId: string, userId: string, role: string, color: string, joinedAt: number, updatedAt: number}>} The created member object
  */
@@ -98,16 +99,46 @@ export async function addMember(household_id, user_id, role, color) {
 }
 
 /**
+ * Invite a member to a household by email.
+ * Creates a new user if one doesn't exist with the given email.
+ * @param {string} household_id - The household ID
+ * @param {string} email - The user's email
+ * @param {string} name - The user's name
+ * @param {string} role - Member role (e.g., 'owner', 'admin', 'member')
+ * @param {string} color - Display color for the member
+ * @returns {Promise<{householdId: string, userId: string, role: string, color: string, joinedAt: number, updatedAt: number}>} The created member object
+ */
+export async function inviteMember(household_id, email, name, role, color) {
+	const db = getDB();
+	if (!db) throw new Error('Database not initialized');
+	
+	// Check if user exists by email
+	let user = await getUserByEmail(email);
+	
+	// Create user if they don't exist
+	if (!user) {
+		user = await createUser(email, name);
+	}
+	
+	// Use addMember to add them to the household
+	return await addMember(household_id, user.id, role, color);
+}
+
+/**
  * Get all members of a household.
  * @param {string} household_id - The household ID
- * @returns {Promise<Array<{householdId: string, userId: string, role: string, color: string, joinedAt: number, updatedAt: number}>>} Array of member objects
+ * @returns {Promise<Array<{householdId: string, userId: string, name: string, email: string, role: string, color: string, joinedAt: number, updatedAt: number}>>} Array of member objects with user details
  */
 export async function getMembers(household_id) {
 	const db = getDB();
 	if (!db) return [];
 	
 	const result = await db.query(
-		'SELECT * FROM members WHERE householdId = ? ORDER BY joinedAt DESC',
+		`SELECT m.*, u.name, u.email 
+		 FROM members m 
+		 JOIN users u ON m.userId = u.id 
+		 WHERE m.householdId = ? 
+		 ORDER BY m.joinedAt DESC`,
 		[household_id]
 	);
 	return result.values || [];
@@ -115,18 +146,25 @@ export async function getMembers(household_id) {
 
 /**
  * Update a member of a household.
+ * Updates both the user's information and their member details.
  * @param {string} household_id - The household ID
  * @param {string} user_id - The user ID
+ * @param {string} name - Updated user name
+ * @param {string} email - Updated user email
  * @param {string} role - Updated member role
  * @param {string} color - Updated display color
  * @returns {Promise<void>}
  */
-export async function updateMember(household_id, user_id, role, color) {
+export async function updateMember(household_id, user_id, name, email, role, color) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 	
 	const updated_at = Date.now();
 	
+	// Update user information in users table
+	await updateUser(user_id, email, name);
+	
+	// Update member information in members table
 	await db.run(
 		'UPDATE members SET role = ?, color = ?, updatedAt = ? WHERE householdId = ? AND userId = ?',
 		[role, color, updated_at, household_id, user_id]

@@ -9,13 +9,16 @@
 	import InputLabel from '$comps/elements/inputs/descriptors/InputLabel.svelte';
 	import InputSelect from '$comps/elements/inputs/InputSelect.svelte';
 	import MemberColor from '$comps/elements/members/MemberColor.svelte';
+	import { fade } from 'svelte/transition';
 
 	// Check if user exists (the default user for this device)
 	let has_user = $derived(!!appState.current_user_id);
 	let has_households = $derived(appState.households.length > 0);
-	
+
 	// Mode: 'create-user' or 'select-household' or 'create-household'
-	let mode = $derived(has_user ? (has_households ? 'select-household' : 'create-household') : 'create-user');
+	let mode = $derived(
+		has_user ? (has_households ? 'select-household' : 'create-household') : 'create-user'
+	);
 
 	// Reset loading when mode changes
 	$effect(() => {
@@ -27,15 +30,22 @@
 	// Form fields for new user
 	let user_name = $state('');
 	let user_email = $state('');
-	
+
 	// Form fields for new household
 	let household_name = $state('');
 	let budget_cycle_start_day = $state(1);
 	let member_color = $state('blue-500');
-	
-	// Selected existing household
+
+	// Selected existing household - pre-select last household if it exists
 	let selected_household_id = $state('');
-	
+
+	// Update selected household when last_household_id is loaded
+	$effect(() => {
+		if (appState.last_household_id && mode === 'select-household' && !selected_household_id) {
+			selected_household_id = appState.last_household_id;
+		}
+	});
+
 	let is_loading = $state(false);
 	let error = $state('');
 
@@ -58,7 +68,7 @@
 	const household_options = $derived(
 		appState.households.map((h) => ({
 			value: h.id,
-			label: `${h.name} (${h.role})`
+			label: h.name
 		}))
 	);
 
@@ -112,13 +122,13 @@
 			// Create household
 			const household = await createHousehold(household_name.trim(), budget_cycle_start_day);
 
-			// Add current user as owner member
+			// Add current user as admin member
 			const color_name = member_color.replace('-500', '');
-			await addMember(household.id, appState.current_user_id, 'owner', color_name);
+			await addMember(household.id, appState.current_user_id, 'admin', color_name);
 
 			// Update app state
 			await appState.setHousehold(household.id, household.name);
-			appState.addHousehold(household.id, household.name, 'owner');
+			appState.addHousehold(household.id, household.name, 'admin');
 
 			console.log('Household created!');
 		} catch (err) {
@@ -196,10 +206,11 @@
 		</div>
 
 		<!-- Form -->
-		<div class="rounded-lg bg-grey-900 p-6 shadow-lg">
+		<div class="rounded-lg bg-grey-900 p-4 shadow-lg">
 			{#if mode === 'create-user'}
 				<!-- Create User Form -->
 				<form
+					in:fade={{ duration: 150 }}
 					onsubmit={(e) => {
 						e.preventDefault();
 						handleCreateUser();
@@ -215,7 +226,7 @@
 								id="name"
 								type="text"
 								bind:value={user_name}
-								placeholder="John Doe"
+								placeholder="Enter your full name"
 								disabled={is_loading}
 								required
 							/>
@@ -227,7 +238,7 @@
 								id="email"
 								type="email"
 								bind:value={user_email}
-								placeholder="john@example.com"
+								placeholder="Enter your email address"
 								disabled={is_loading}
 								required
 							/>
@@ -243,19 +254,20 @@
 						</div>
 					{/if}
 
-					<Button type="submit" color="primary" class="w-full" disabled={is_loading}>
+					<Button type="submit" color="primary" class="ml-auto" disabled={is_loading}>
 						{#if is_loading}
-							<Icon name="spinner" class="size-5 animate-spin" />
 							Creating account...
+							<Icon name="spinner" class="size-5 animate-spin" />
 						{:else}
-							<Icon name="arrow-right" class="size-5" />
 							Continue
+							<Icon name="arrow-right" class="size-5" />
 						{/if}
 					</Button>
 				</form>
 			{:else if mode === 'select-household'}
 				<!-- Select Household Form -->
 				<form
+					in:fade={{ duration: 150 }}
 					onsubmit={(e) => {
 						e.preventDefault();
 						handleSelectHousehold();
@@ -284,32 +296,32 @@
 						</div>
 					{/if}
 
-					<div class="space-y-2">
-						<Button type="submit" color="primary" class="w-full" disabled={is_loading}>
-							{#if is_loading}
-								<Icon name="spinner" class="size-5 animate-spin" />
-								Loading...
-							{:else}
-								<Icon name="arrow-right" class="size-5" />
-								Continue
-							{/if}
-						</Button>
-
+					<div class="flex flex-nowrap justify-between gap-2">
 						<Button
 							type="button"
 							color="secondary"
-							class="w-full"
 							onclick={() => (mode = 'create-household')}
 							disabled={is_loading}
 						>
 							<Icon name="plus" class="size-5" />
-							Create New Household
+							Household
+						</Button>
+
+						<Button type="submit" color="primary" disabled={is_loading}>
+							{#if is_loading}
+								Loading...
+								<Icon name="spinner" class="size-5 animate-spin" />
+							{:else}
+								Continue
+								<Icon name="arrow-right" class="size-5" />
+							{/if}
 						</Button>
 					</div>
 				</form>
 			{:else}
 				<!-- Create Household Form -->
 				<form
+					in:fade={{ duration: 150 }}
 					onsubmit={(e) => {
 						e.preventDefault();
 						handleCreateHousehold();
@@ -323,7 +335,7 @@
 								id="household"
 								type="text"
 								bind:value={household_name}
-								placeholder="Smith Family Budget"
+								placeholder="Enter a household name"
 								disabled={is_loading}
 								required
 							/>
@@ -335,7 +347,7 @@
 								id="budgetDay"
 								type="number"
 								bind:value={budget_cycle_start_day}
-								placeholder="Enter the day your month starts (1-31)"
+								placeholder="Enter the day your month starts (usually around payday)"
 								disabled={is_loading}
 								required
 							/>
@@ -348,7 +360,8 @@
 									<button
 										type="button"
 										onclick={() => (member_color = color.value)}
-										class="scale-90 rounded-full border-2 transition-all {member_color === color.value
+										class="scale-90 rounded-full border-2 transition-all {member_color ===
+										color.value
 											? 'scale-100 border-white'
 											: 'border-transparent'}"
 										disabled={is_loading}
@@ -370,38 +383,30 @@
 						</div>
 					{/if}
 
-					<div class="space-y-2">
-						<Button type="submit" color="primary" class="w-full" disabled={is_loading}>
-							{#if is_loading}
-								<Icon name="spinner" class="size-5 animate-spin" />
-								Creating household...
-							{:else}
-								<Icon name="arrow-right" class="size-5" />
-								Get Started
-							{/if}
-						</Button>
-
+					<div class="flex flex-nowrap gap-2 {!has_households ? 'justify-end' : 'justify-between'}">
 						{#if has_households}
 							<Button
 								type="button"
 								color="secondary"
-								class="w-full"
 								onclick={() => (mode = 'select-household')}
 								disabled={is_loading}
 							>
 								<Icon name="arrow-left" class="size-5" />
-								Back to Select Household
+								Back
 							</Button>
 						{/if}
+						<Button type="submit" color="primary" disabled={is_loading}>
+							{#if is_loading}
+								Creating household...
+								<Icon name="spinner" class="size-5 animate-spin" />
+							{:else}
+								Get Started
+								<Icon name="arrow-right" class="size-5" />
+							{/if}
+						</Button>
 					</div>
 				</form>
 			{/if}
 		</div>
-
-		{#if mode === 'create-household'}
-			<p class="text-center text-sm text-gray-500">
-				You can invite other members to your household later
-			</p>
-		{/if}
 	</div>
 </div>
