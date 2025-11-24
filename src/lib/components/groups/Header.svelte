@@ -5,7 +5,7 @@
 	import Logo from '$comps/elements/Logo.svelte';
 	import { navigation, SCREENS } from '$lib/navigation.svelte';
 
-	let { drawer_open = $bindable(false) } = $props();
+	let { drawer_open = $bindable(false), mode = 'none', onclick = null } = $props();
 
 	/**
 	 * Navigate to a screen
@@ -24,7 +24,15 @@
 	<button class="appearance-none outline-0" onclick={() => navigate(SCREENS.DASHBOARD)}>
 		<Logo />
 	</button>
-	<ButtonRound size="large">
-		<Icon name="plus" class="size-5" />
-	</ButtonRound>
+	{#if mode === 'add'}
+		<ButtonRound size="large" {onclick}>
+			<Icon name="plus" class="size-5" />
+		</ButtonRound>
+	{:else if mode === 'delete'}
+		<ButtonRound size="large" color="danger" {onclick}>
+			<Icon name="trash" class="size-5" />
+		</ButtonRound>
+	{:else}
+		<div class="size-5"></div>
+	{/if}
 </header>

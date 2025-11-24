@@ -116,7 +116,7 @@
 								? 'bg-primary-700 font-semibold'
 								: ''}"
 						>
-							<Icon name="wallet" class="size-4" />
+							<Icon name="sliders" class="size-4" />
 							Budgets
 						</button>
 						<button
@@ -150,7 +150,7 @@
 								? 'bg-primary-700 font-semibold'
 								: ''}"
 						>
-							<Icon name="cog" class="size-4" />
+							<Icon name="gear" class="size-4" />
 							Settings
 						</button>
 						<button
@@ -190,7 +190,7 @@
 				</Button>
 			</FAB>
 		</div>
-		<Header bind:drawer_open />
+		<Header bind:drawer_open mode={navigation.header_mode} onclick={navigation.header_onclick} />
 	</div>
 {:else}
 	{@render children()}

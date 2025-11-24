@@ -3,28 +3,6 @@
  */
 
 /**
- * Format currency amount from cents to display format (ZAR)
- * @param {number} cents - Amount in cents
- * @returns {string} Formatted currency string
- */
-export function formatCurrency(cents) {
-	return `R${(cents / 100).toLocaleString('en-ZA', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	})}`;
-}
-
-/**
- * Parse currency string to cents
- * @param {string} currency - Currency string like "R12.34" or "12.34"
- * @returns {number} Amount in cents
- */
-export function parseCurrency(currency) {
-	const cleaned = currency.replace(/[R\s,]/g, '');
-	return Math.round(parseFloat(cleaned) * 100);
-}
-
-/**
  * Generate a unique ID
  * @returns {string} Unique identifier
  */
@@ -39,15 +17,6 @@ export function generateId() {
  */
 export function formatDateForStorage(date) {
 	return date.toISOString().split('T')[0];
-}
-
-/**
- * Parse ISO date string to Date object
- * @param {string} isoDate - ISO date string
- * @returns {Date} Date object
- */
-export function parseDateFromStorage(isoDate) {
-	return new Date(isoDate);
 }
 
 /**
@@ -73,19 +42,28 @@ export function formatDate(
  * @returns {string} Formatted date string
  */
 export function formatRelativeDate(date_string) {
-	const inputDate = new Date(date_string + 'T00:00:00');
+	const input_date = new Date(date_string + 'T00:00:00');
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 	
-	const diffTime = inputDate.getTime() - today.getTime();
-	const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+	const diff_time = input_date.getTime() - today.getTime();
+	const diff_days = Math.round(diff_time / (1000 * 60 * 60 * 24));
 	
-	if (diffDays === 0) return 'Today';
-	if (diffDays === -1) return 'Yesterday';
-	if (diffDays === 1) return 'Tomorrow';
+	if (diff_days === 0) return 'Today';
+	if (diff_days === -1) return 'Yesterday';
+	if (diff_days === 1) return 'Tomorrow';
 	
-	// Format as "Fri, 24 Oct 2025" using the existing formatDate function
-	return formatDate(date_string, {
+	// Check if date is in current year
+	const current_year = today.getFullYear();
+	const input_year = input_date.getFullYear();
+	const is_current_year = current_year === input_year;
+	
+	// Format as "Fri, 24 Oct" for current year or "Fri, 24 Oct 2025" for other years
+	return formatDate(date_string, is_current_year ? {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short'
+	} : {
 		weekday: 'short',
 		day: 'numeric',
 		month: 'short',
@@ -160,6 +138,6 @@ export function getMemberColors() {
  */
 export function getColorBgClass(color_name) {
 	return (
-		COLOR_TO_BG_CLASS[/** @type {keyof typeof COLOR_TO_BG_CLASS} */ (color_name)] || 'bg-gray-500'
+		COLOR_TO_BG_CLASS[/** @type {keyof typeof COLOR_TO_BG_CLASS} */ (color_name)] || 'bg-grey-500'
 	);
 }

@@ -25,6 +25,12 @@ class NavigationState {
 	/** @type {ScreenType[]} */
 	history = $state([]);
 
+	/** @type {'add' | 'delete' | 'none'} */
+	header_mode = $state('none');
+
+	/** @type {(() => void) | null} */
+	header_onclick = $state(null);
+
 	/**
 	 * Navigate to a specified screen
 	 * @param {ScreenType} screen - The screen to navigate to
@@ -32,6 +38,19 @@ class NavigationState {
 	navigateTo(screen) {
 		this.history.push(this.current_screen);
 		this.current_screen = screen;
+		// Reset header when navigating
+		this.header_mode = 'none';
+		this.header_onclick = null;
+	}
+
+	/**
+	 * Set the header button mode and action
+	 * @param {'add' | 'delete' | 'none'} mode - The header button mode
+	 * @param {(() => void) | null} onclick - The click handler
+	 */
+	setHeaderMode(mode, onclick = null) {
+		this.header_mode = mode;
+		this.header_onclick = onclick;
 	}
 
 	// Navigate back to the previous screen in history

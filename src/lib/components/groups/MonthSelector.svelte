@@ -8,7 +8,6 @@
 		isSameMonth,
 		formatMonthDisplay
 	} from '$lib/utils';
-	import { fade } from 'svelte/transition';
 
 	/**
 	 * @typedef {Object} Props
@@ -72,7 +71,7 @@
 		{#if show_next_button}
 			<Icon name="arrow-right" class="size-5" />
 		{:else if show_plus_button}
-			<Icon name="plus" class="size-5" />
+			<Icon name="calendar-plus" class="size-5" />
 		{/if}
 	</ButtonRound>
 </div>
