@@ -33,6 +33,6 @@
 			<Icon name="trash" class="size-5" />
 		</ButtonRound>
 	{:else}
-		<div class="size-5"></div>
+		<div class="size-11"></div>
 	{/if}
 </header>
