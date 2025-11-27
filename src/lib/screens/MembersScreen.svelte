@@ -7,15 +7,14 @@
 	import InputText from '$comps/elements/inputs/InputText.svelte';
 	import MemberSelect from '$comps/elements/members/MemberSelect.svelte';
 	import Sheet from '$comps/elements/Sheet.svelte';
-	import Panel from '$comps/elements/Panel.svelte';
 	import CardMember from '$comps/groups/cards/CardMember.svelte';
 	import { appState } from '$lib/appState.svelte.js';
 	import { navigation } from '$lib/navigation.svelte.js';
 	import { getMembers, updateMember, inviteMember, removeMember } from '$lib/db';
 	import { getMemberColors, formatRelativeDate } from '$lib/utils/helpers';
-	import { error } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
+	import Modal from '$comps/groups/Modal.svelte';
+	import PrettyJSON from '$comps/elements/debugging/PrettyJSON.svelte';
 
 	let members = $state([]);
 	let edit_sheet_open = $state(false);
@@ -225,12 +224,12 @@
 </script>
 
 <div class="space-y-4">
-	<h1 class="text-center text-lg leading-none">Members</h1>
+	<h1 class="text-center text-xl leading-none font-medium">Members</h1>
 
 	{#if members.length === 0}
 		<p class="text-gray-600 mt-4 text-sm">No members found.</p>
 	{:else}
-		<!-- <pre class="bg-gray-100 mt-4 rounded p-2 text-sm">{JSON.stringify(members, null, 2)}</pre> -->
+		<!-- <PrettyJSON data={members} /> -->
 		{#each members as member}
 			<CardMember
 				color={member.color}
@@ -251,7 +250,7 @@
 		handleUpdateMember();
 	}}
 >
-	<h1 class="text-center text-lg leading-none">Edit Member</h1>
+	<h1 class="text-center text-xl leading-none font-medium">Edit Member</h1>
 	<div class="space-y-1">
 		<InputLabel text="Full name" for="full-name" />
 		<InputText id="full-name" placeholder="Enter full name" bind:value={member_name} />
@@ -312,7 +311,7 @@
 		handleAddMember();
 	}}
 >
-	<h1 class="text-center text-lg leading-none">Add Member</h1>
+	<h1 class="text-center text-xl leading-none font-medium">Add Member</h1>
 	<div class="space-y-1">
 		<InputLabel text="Full name" for="new-full-name" />
 		<InputText
@@ -350,36 +349,24 @@
 	</div>
 </Sheet>
 
-{#if delete_panel_open}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
-		onclick={() => (delete_panel_open = false)}
-		role="none"
-		transition:fade={{ duration: 200 }}
-	>
-		<div transition:fly={{ y: 20, duration: 200 }}>
-			<Panel>
-				<div class="space-y-4">
-					<h2 class="text-center text-xl font-semibold">
-						Delete Member{selected_members.length > 1 ? 's' : ''}?
-					</h2>
-					<p class="text-gray-400 text-center">
-						Are you sure you want to delete {selected_members.length} member{selected_members.length >
-						1
-							? 's'
-							: ''}? This action cannot be undone.
-					</p>
-					<div class="flex gap-2">
-						<Button color="secondary" onclick={() => (delete_panel_open = false)} class="flex-1">
-							Cancel
-						</Button>
-						<Button color="danger" onclick={handleDeleteMembers} class="flex-1">
-							<Icon name="trash" class="size-5" />
-							Delete
-						</Button>
-					</div>
-				</div>
-			</Panel>
+<Modal bind:is_active={delete_panel_open}>
+	<div class="space-y-4">
+		<h2 class="text-center text-xl font-semibold">
+			Delete Member{selected_members.length > 1 ? 's' : ''}?
+		</h2>
+		<p>
+			Are you sure you want to delete {selected_members.length} member{selected_members.length > 1
+				? 's'
+				: ''}? This action cannot be undone.
+		</p>
+		<div class="flex justify-between gap-2">
+			<ButtonRound color="secondary" onclick={() => (delete_panel_open = false)}>
+				<Icon name="xmark" class="size-5" />
+			</ButtonRound>
+			<Button color="danger" onclick={handleDeleteMembers}>
+				<Icon name="trash" class="size-5" />
+				Delete
+			</Button>
 		</div>
 	</div>
-{/if}
+</Modal>

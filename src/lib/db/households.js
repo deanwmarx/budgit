@@ -23,7 +23,13 @@ export async function createHousehold(name, budget_cycle_start_day) {
 	);
 
 	await trackDeviceActivity();
-	return { id, name, budgetCycleStartDay: budget_cycle_start_day, createdAt: created_at, updatedAt: updated_at };
+	return {
+		id,
+		name,
+		budgetCycleStartDay: budget_cycle_start_day,
+		createdAt: created_at,
+		updatedAt: updated_at
+	};
 }
 
 /**
@@ -36,6 +42,19 @@ export async function getHouseholds() {
 
 	const result = await db.query('SELECT * FROM households ORDER BY createdAt DESC');
 	return result.values || [];
+}
+
+/**
+ * Get a household by ID.
+ * @param {string} id - The household ID
+ * @returns {Promise<{id: string, name: string, budgetCycleStartDay: number, createdAt: number, updatedAt: number} | null>} The household object or null if not found
+ */
+export async function getHousehold(id) {
+	const db = getDB();
+	if (!db) return null;
+
+	const result = await db.query('SELECT * FROM households WHERE id = ?', [id]);
+	return result.values && result.values.length > 0 ? result.values[0] : null;
 }
 
 /**
@@ -85,17 +104,24 @@ export async function deleteHousehold(id) {
 export async function addMember(household_id, user_id, role, color) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
-	
+
 	const joined_at = Date.now();
 	const updated_at = joined_at;
-	
+
 	await db.run(
 		'INSERT INTO members (householdId, userId, role, color, joinedAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)',
 		[household_id, user_id, role, color, joined_at, updated_at]
 	);
 
 	await trackDeviceActivity();
-	return { householdId: household_id, userId: user_id, role, color, joinedAt: joined_at, updatedAt: updated_at };
+	return {
+		householdId: household_id,
+		userId: user_id,
+		role,
+		color,
+		joinedAt: joined_at,
+		updatedAt: updated_at
+	};
 }
 
 /**
@@ -111,15 +137,15 @@ export async function addMember(household_id, user_id, role, color) {
 export async function inviteMember(household_id, email, name, role, color) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
-	
+
 	// Check if user exists by email
 	let user = await getUserByEmail(email);
-	
+
 	// Create user if they don't exist
 	if (!user) {
 		user = await createUser(email, name);
 	}
-	
+
 	// Use addMember to add them to the household
 	return await addMember(household_id, user.id, role, color);
 }
@@ -132,7 +158,7 @@ export async function inviteMember(household_id, email, name, role, color) {
 export async function getMembers(household_id) {
 	const db = getDB();
 	if (!db) return [];
-	
+
 	const result = await db.query(
 		`SELECT m.*, u.name, u.email 
 		 FROM members m 
@@ -158,12 +184,12 @@ export async function getMembers(household_id) {
 export async function updateMember(household_id, user_id, name, email, role, color) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
-	
+
 	const updated_at = Date.now();
-	
+
 	// Update user information in users table
 	await updateUser(user_id, email, name);
-	
+
 	// Update member information in members table
 	await db.run(
 		'UPDATE members SET role = ?, color = ?, updatedAt = ? WHERE householdId = ? AND userId = ?',

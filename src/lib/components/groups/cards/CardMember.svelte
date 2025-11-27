@@ -16,14 +16,14 @@
 	 */
 
 	/** @type {Props} */
-	let { 
-		color = 'blue', 
-		name = '', 
+	let {
+		color = 'blue',
+		name = '',
 		role = 'member',
 		is_selected = false,
 		long_press_duration = 500,
 		on_long_press = null,
-		...rest 
+		...rest
 	} = $props();
 
 	const ROLE_ICONS = {
@@ -35,7 +35,7 @@
 
 	function handlePointerDown() {
 		if (!on_long_press) return;
-		
+
 		press_timer = setTimeout(async () => {
 			// Trigger haptic feedback
 			try {
@@ -43,7 +43,7 @@
 			} catch (e) {
 				console.log('Haptics not available:', e);
 			}
-			
+
 			// Call long press handler
 			on_long_press?.();
 		}, long_press_duration);
@@ -62,15 +62,15 @@
 			clearTimeout(press_timer);
 			press_timer = null;
 		}
-		
+
 		// Call regular click handler
 		rest.onclick?.();
 	}
 </script>
 
 <button
-	class="w-full appearance-none rounded-lg border bg-grey-800 p-2.5 outline-0 transition-colors duration-300 active:bg-grey-700 {is_selected 
-		? 'border-primary-800 ring-2 ring-primary-800' 
+	class="w-full appearance-none rounded-lg border bg-grey-800 p-2.5 outline-0 transition-all duration-300 active:bg-grey-700 {is_selected
+		? 'border-primary-800 bg-grey-700! ring-2 ring-primary-800'
 		: 'border-grey-900 active:border-grey-800'}"
 	onclick={handleClick}
 	onpointerdown={handlePointerDown}
