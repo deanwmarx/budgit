@@ -1,5 +1,5 @@
 import { Preferences } from '@capacitor/preferences';
-import { initDB, setCurrentDevice, getUserHouseholds } from '$lib/db';
+import { initDB, setCurrentDevice, getUserHouseholds, getHousehold } from '$lib/db';
 import { Device } from '@capacitor/device';
 
 /**
@@ -49,6 +49,18 @@ class AppState {
 	/** @type {string | null} */
 	device_id = $state(null);
 
+	/** @type {{message:string,stack?:string} | null} */
+	last_error = $state(null);
+
+	/** @type {boolean} */
+	error_active = $state(false);
+
+	/** @type {{id: string, name: string, budgetCycleStartDay: number} | null} */
+	current_household = $state(null);
+
+	/** @type {string | null} */
+	current_month_id = $state(null);
+
 	/**
 	 * Initialize the app - load saved preferences and setup database
 	 */
@@ -67,15 +79,17 @@ class AppState {
 			const { value: default_user_id } = await Preferences.get({ key: PREF_KEYS.DEFAULT_USER_ID });
 			const { value: default_user_email } = await Preferences.get({ key: PREF_KEYS.USER_EMAIL });
 			const { value: default_user_name } = await Preferences.get({ key: PREF_KEYS.USER_NAME });
-			
+
 			// Load current household selection
 			const { value: household_id } = await Preferences.get({ key: PREF_KEYS.HOUSEHOLD_ID });
 			const { value: household_name } = await Preferences.get({
 				key: PREF_KEYS.HOUSEHOLD_NAME
 			});
-			
+
 			// Load last household ID
-			const { value: last_household_id } = await Preferences.get({ key: PREF_KEYS.LAST_HOUSEHOLD_ID });
+			const { value: last_household_id } = await Preferences.get({
+				key: PREF_KEYS.LAST_HOUSEHOLD_ID
+			});
 			if (last_household_id) {
 				this.last_household_id = last_household_id;
 			}
@@ -100,6 +114,16 @@ class AppState {
 				if (household_id && household_name) {
 					this.current_household_id = household_id;
 					this.current_household_name = household_name;
+
+					const household = await getHousehold(household_id);
+					if (household) {
+						this.current_household = {
+							id: household.id,
+							name: household.name,
+							budgetCycleStartDay: household.budgetCycleStartDay
+						};
+					}
+
 					this.is_initialized = true;
 				}
 				// If no saved household but user has households, they need to select one
@@ -110,6 +134,26 @@ class AppState {
 		} finally {
 			this.is_loading = false;
 		}
+	}
+
+	/**
+	 * Set a global error for display in the UI
+	 * @param {any} err
+	 */
+	setError(err) {
+		try {
+			const e = err instanceof Error ? err : new Error(String(err));
+			this.last_error = { message: e.message, stack: e.stack };
+			this.error_active = true;
+		} catch (e) {
+			// Swallow to avoid infinite loops
+		}
+	}
+
+	/** Clear the global error UI */
+	clearError() {
+		this.last_error = null;
+		this.error_active = false;
 	}
 
 	/**
@@ -150,9 +194,18 @@ class AppState {
 	async setHousehold(household_id, household_name) {
 		this.current_household_id = household_id;
 		this.current_household_name = household_name;
+
+		const household = await getHousehold(household_id);
+		if (household) {
+			this.current_household = {
+				id: household.id,
+				name: household.name,
+				budgetCycleStartDay: household.budgetCycleStartDay
+			};
+		}
+
 		this.is_initialized = true;
 
-		// Save to preferences
 		await Preferences.set({ key: PREF_KEYS.HOUSEHOLD_ID, value: household_id });
 		await Preferences.set({ key: PREF_KEYS.HOUSEHOLD_NAME, value: household_name });
 	}
@@ -176,7 +229,8 @@ class AppState {
 			this.last_household_id = this.current_household_id;
 			await Preferences.set({ key: PREF_KEYS.LAST_HOUSEHOLD_ID, value: this.current_household_id });
 		}
-		
+
+		this.current_household = null;
 		this.current_household_id = null;
 		this.current_household_name = null;
 		this.is_initialized = false;
@@ -192,4 +246,3 @@ class AppState {
  * @type {AppState}
  */
 export const appState = new AppState();
-

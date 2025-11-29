@@ -63,8 +63,15 @@
 >
 	{#if mode === 'update'}
 		<div in:fade={{ duration: 200 }}>
-			<ButtonRound size="large" color="secondary" onclick={() => (drawer_open = true)}>
-				<Icon name="menu" class="size-5" />
+			<ButtonRound size="large" color="secondary" onclick={() => {
+				// call global undo handler if present
+				if (navigation.header_undo && typeof navigation.header_undo === 'function') {
+					navigation.header_undo();
+				} else {
+					drawer_open = true;
+				}
+			}}>
+				<Icon name="xmark" class="size-5" />
 			</ButtonRound>
 		</div>
 	{:else}

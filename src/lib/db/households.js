@@ -64,15 +64,15 @@ export async function getHousehold(id) {
  * @param {number} budget_cycle_start_day - Updated day of month when budget cycle starts (1-31)
  * @returns {Promise<void>}
  */
-export async function updateHousehold(id, name, budget_cycle_start_day) {
+export async function updateHousehold(id, name, budget_cycle_start_day, budget_warning_threshold, budget_danger_threshold) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
 	const updated_at = Date.now();
 
 	await db.run(
-		'UPDATE households SET name = ?, budgetCycleStartDay = ?, updatedAt = ? WHERE id = ?',
-		[name, budget_cycle_start_day, updated_at, id]
+		'UPDATE households SET name = ?, budgetCycleStartDay = ?, budgetWarningThreshold = ?, budgetDangerThreshold = ?, updatedAt = ? WHERE id = ?',
+		[name, budget_cycle_start_day, budget_warning_threshold, budget_danger_threshold, updated_at, id]
 	);
 
 	await trackDeviceActivity();

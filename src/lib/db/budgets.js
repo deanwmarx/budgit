@@ -23,7 +23,14 @@ export async function createMonth(household_id, start_date, end_date) {
 	);
 
 	await trackDeviceActivity();
-	return { id, householdId: household_id, startDate: start_date, endDate: end_date, createdAt: created_at, updatedAt: updated_at };
+	return {
+		id,
+		householdId: household_id,
+		startDate: start_date,
+		endDate: end_date,
+		createdAt: created_at,
+		updatedAt: updated_at
+	};
 }
 
 /**
@@ -43,6 +50,24 @@ export async function getMonths(household_id, limit) {
 	const params = limit ? [household_id, limit] : [household_id];
 
 	const result = await db.query(query, params);
+	return result.values || [];
+}
+
+/**
+ * Get months older than a specific timestamp.
+ * @param {string} household_id - The household ID
+ * @param {number} before_timestamp - Get months with startDate < this timestamp
+ * @param {number} limit - Number of months to return
+ * @returns {Promise<Array<{id: string, householdId: string, startDate: number, endDate: number, createdAt: number, updatedAt: number}>>} Array of month objects
+ */
+export async function getMonthsBefore(household_id, before_timestamp, limit) {
+	const db = getDB();
+	if (!db) return [];
+
+	const result = await db.query(
+		'SELECT * FROM months WHERE householdId = ? AND startDate < ? ORDER BY startDate DESC LIMIT ?',
+		[household_id, before_timestamp, limit]
+	);
 	return result.values || [];
 }
 
@@ -72,10 +97,12 @@ export async function updateMonth(id, start_date, end_date) {
 
 	const updated_at = Date.now();
 
-	await db.run(
-		'UPDATE months SET startDate = ?, endDate = ?, updatedAt = ? WHERE id = ?',
-		[start_date, end_date, updated_at, id]
-	);
+	await db.run('UPDATE months SET startDate = ?, endDate = ?, updatedAt = ? WHERE id = ?', [
+		start_date,
+		end_date,
+		updated_at,
+		id
+	]);
 
 	await trackDeviceActivity();
 }
@@ -121,7 +148,14 @@ export async function setBudget(month_id, group_name, amount) {
 	);
 
 	await trackDeviceActivity();
-	return { id, monthId: month_id, groupName: group_name, amount, createdAt: created_at, updatedAt: updated_at };
+	return {
+		id,
+		monthId: month_id,
+		groupName: group_name,
+		amount,
+		createdAt: created_at,
+		updatedAt: updated_at
+	};
 }
 
 /**
@@ -133,10 +167,9 @@ export async function getBudgets(month_id) {
 	const db = getDB();
 	if (!db) return [];
 
-	const result = await db.query(
-		'SELECT * FROM budgets WHERE monthId = ? ORDER BY groupName ASC',
-		[month_id]
-	);
+	const result = await db.query('SELECT * FROM budgets WHERE monthId = ? ORDER BY groupName ASC', [
+		month_id
+	]);
 	return result.values || [];
 }
 
@@ -150,10 +183,10 @@ export async function getBudget(month_id, group_name) {
 	const db = getDB();
 	if (!db) return null;
 
-	const result = await db.query(
-		'SELECT * FROM budgets WHERE monthId = ? AND groupName = ?',
-		[month_id, group_name]
-	);
+	const result = await db.query('SELECT * FROM budgets WHERE monthId = ? AND groupName = ?', [
+		month_id,
+		group_name
+	]);
 	return result.values?.[0] || null;
 }
 

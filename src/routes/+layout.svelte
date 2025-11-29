@@ -28,9 +28,69 @@
 
 	let show_layout = $derived(appState.is_initialized);
 
-	onMount(async () => {
-		// Initialize app state - loads user/household from Capacitor Preferences
-		await appState.initialize();
+	onMount(() => {
+		/** @type {any} */
+		let cleanup = null;
+		(async () => {
+			// Initialize app state - loads user/household from Capacitor Preferences
+			await appState.initialize();
+
+			if (typeof window === 'undefined') return;
+
+			const origConsoleError = console.error && console.error.bind(console);
+
+			/** @param {any} ev */
+			function errorEventHandler(ev) {
+				try {
+					const err = ev?.error || (ev?.message ? new Error(ev.message) : ev);
+					appState.setError(err);
+				} catch (e) {
+					// ignore
+				}
+				if (origConsoleError) origConsoleError(ev);
+			}
+
+			/** @param {any} ev */
+			function rejectionHandler(ev) {
+				try {
+					const reason = ev?.reason || new Error('Unhandled rejection');
+					appState.setError(reason);
+				} catch (e) {
+					// ignore
+				}
+				if (origConsoleError) origConsoleError(ev.reason || ev);
+			}
+
+			/** @param {...any} args */
+			function consoleErrorOverride(...args) {
+				try {
+					const first = args[0];
+					const err = first instanceof Error ? first : new Error(args.map(String).join(' '));
+					appState.setError(err);
+				} catch (e) {
+					// ignore
+				}
+				if (origConsoleError) origConsoleError(...args);
+			}
+
+			window.addEventListener('error', errorEventHandler);
+			window.addEventListener('unhandledrejection', rejectionHandler);
+			console.error = consoleErrorOverride;
+
+			cleanup = () => {
+				if (origConsoleError) console.error = origConsoleError;
+				window.removeEventListener('error', errorEventHandler);
+				window.removeEventListener('unhandledrejection', rejectionHandler);
+			};
+		})();
+
+		return () => {
+			if (cleanup) cleanup();
+		};
+	});
+
+	$effect(() => {
+		appState.current_month_id = current_month;
 	});
 
 	/**
@@ -144,16 +204,6 @@
 				<div>
 					<div class="space-y-2 border-b border-grey-800 pb-4">
 						<button
-							onclick={() => navigate(SCREENS.SETTINGS)}
-							class="flex w-full items-center gap-1 px-4 py-1.5 text-left transition-colors duration-300 active:bg-grey-800 {navigation.current_screen ===
-							SCREENS.SETTINGS
-								? 'bg-primary-700 font-semibold'
-								: ''}"
-						>
-							<Icon name="gear" class="size-4" />
-							Settings
-						</button>
-						<button
 							onclick={() => navigate(SCREENS.MEMBERS)}
 							class="flex w-full items-center gap-2 px-4 py-1.5 text-left transition-colors duration-300 active:bg-grey-800 {navigation.current_screen ===
 							SCREENS.MEMBERS
@@ -162,6 +212,16 @@
 						>
 							<Icon name="users" class="size-4" />
 							Members
+						</button>
+						<button
+							onclick={() => navigate(SCREENS.SETTINGS)}
+							class="flex w-full items-center gap-1 px-4 py-1.5 text-left transition-colors duration-300 active:bg-grey-800 {navigation.current_screen ===
+							SCREENS.SETTINGS
+								? 'bg-primary-700 font-semibold'
+								: ''}"
+						>
+							<Icon name="gear" class="size-4" />
+							Settings
 						</button>
 					</div>
 					<div class="p-4 text-right">

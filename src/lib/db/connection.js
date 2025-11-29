@@ -72,6 +72,8 @@ export async function initDB() {
 				id TEXT PRIMARY KEY,
 				name TEXT NOT NULL,
 				budgetCycleStartDay INTEGER NOT NULL,
+				budgetWarningThreshold INTEGER NOT NULL DEFAULT 75,
+				budgetDangerThreshold INTEGER NOT NULL DEFAULT 90,
 				createdAt INTEGER NOT NULL,
 				updatedAt INTEGER NOT NULL	
 			);

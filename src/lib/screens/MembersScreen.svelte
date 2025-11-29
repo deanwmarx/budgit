@@ -227,7 +227,9 @@
 	<h1 class="text-center text-xl leading-none font-medium">Members</h1>
 
 	{#if members.length === 0}
-		<p class="text-gray-600 mt-4 text-sm">No members found.</p>
+		<p class="text-center text-sm">
+			No members found. Click the "+" button to add your first member.
+		</p>
 	{:else}
 		<!-- <PrettyJSON data={members} /> -->
 		{#each members as member}
@@ -270,8 +272,8 @@
 		<InputLabel text="Role" for="role" />
 		<InputOptions
 			options={[
-				{ value: 'admin', label: 'Admin' },
-				{ value: 'member', label: 'Member' }
+				{ value: 'admin', label: 'Admin', icon: 'star' },
+				{ value: 'member', label: 'Member', icon: 'user' }
 			]}
 			bind:value={member_role}
 		/>
@@ -312,6 +314,7 @@
 	}}
 >
 	<h1 class="text-center text-xl leading-none font-medium">Add Member</h1>
+
 	<div class="space-y-1">
 		<InputLabel text="Full name" for="new-full-name" />
 		<InputText
@@ -336,8 +339,8 @@
 		<InputLabel text="Role" for="new-role" />
 		<InputOptions
 			options={[
-				{ value: 'admin', label: 'Admin' },
-				{ value: 'member', label: 'Member' }
+				{ value: 'admin', label: 'Admin', icon: 'star' },
+				{ value: 'member', label: 'Member', icon: 'user' }
 			]}
 			bind:value={new_member_role}
 		/>

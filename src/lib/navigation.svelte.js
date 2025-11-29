@@ -25,11 +25,14 @@ class NavigationState {
 	/** @type {ScreenType[]} */
 	history = $state([]);
 
-	/** @type {'add' | 'delete' | 'none'} */
+	/** @type {'add' | 'delete' | 'update' | 'none'} */
 	header_mode = $state('none');
 
 	/** @type {(() => void) | null} */
 	header_onclick = $state(null);
+
+	/** @type {(() => void) | null} */
+	header_undo = $state(null);
 
 	/**
 	 * Navigate to a specified screen
@@ -45,7 +48,7 @@ class NavigationState {
 
 	/**
 	 * Set the header button mode and action
-	 * @param {'add' | 'delete' | 'none'} mode - The header button mode
+	 * @param {'add' | 'update' | 'delete' | 'none'} mode - The header button mode
 	 * @param {(() => void) | null} onclick - The click handler
 	 */
 	setHeaderMode(mode, onclick = null) {

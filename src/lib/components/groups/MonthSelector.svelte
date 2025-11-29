@@ -1,76 +1,181 @@
 <script>
+	import { onMount, untrack } from 'svelte';
 	import ButtonRound from '$comps/elements/buttons/ButtonRound.svelte';
 	import Icon from '$comps/elements/icons/Icon.svelte';
+	import { appState } from '$lib/appState.svelte.js';
+	import { getMonths, getMonthsBefore, createMonth } from '$lib/db';
 	import {
-		getPreviousMonthId,
-		getNextMonthId,
-		getCurrentMonthId,
-		isSameMonth,
-		formatMonthDisplay
+		formatMonthDisplay,
+		getCurrentBudgetMonthId,
+		calculateMonthDates,
+		canCreateNextMonth,
+		getNextMonthId
 	} from '$lib/utils';
 
-	/**
-	 * @typedef {Object} Props
-	 * @property {string} current_month - The currently selected month ID in YYYY-MM format (e.g., "2025-10")
-	 * @property {boolean} [can_create] - Whether a new month can be created (based on budget cycle day)
-	 */
+	let { current_month = $bindable() } = $props();
 
-	/** @type {Props} */
-	let { current_month = $bindable(), can_create = false } = $props();
+	let existing_months = $state([]);
+	let is_loading = $state(true);
+	let oldest_loaded_timestamp = $state(null);
+	let has_more_older_months = $state(true);
 
-	/**
-	 * Navigate to the previous month
-	 */
-	function goToPreviousMonth() {
-		current_month = getPreviousMonthId(current_month);
-	}
+	const household = $derived(appState.current_household);
+	const start_day = $derived(household?.budgetCycleStartDay || 1);
 
-	/**
-	 * Navigate to the next month
-	 */
-	function goToNextMonth() {
-		current_month = getNextMonthId(current_month);
-	}
+	const latest_month = $derived(
+		existing_months.length > 0
+			? existing_months.reduce((latest, m) => (m.id > latest.id ? m : latest))
+			: null
+	);
 
-	/**
-	 * Check if currently viewing the actual current month
-	 */
-	const is_current_month = $derived(isSameMonth(current_month, getCurrentMonthId()));
+	const can_create_next = $derived(
+		latest_month ? canCreateNextMonth(latest_month.id, start_day) : false
+	);
 
-	/**
-	 * Determine if the plus button should be visible
-	 */
-	const show_plus_button = $derived(is_current_month && can_create);
-
-	/**
-	 * Determine if the next button should be visible
-	 * Show when we're viewing a past month (not the current month)
-	 */
-	const show_next_button = $derived(!is_current_month);
-
-	/**
-	 * Format the current month for display (e.g., "October 2025")
-	 */
+	const is_latest_month = $derived(latest_month && current_month === latest_month.id);
+	const show_plus_button = $derived(is_latest_month && can_create_next);
+	const show_next_button = $derived(!is_latest_month);
 	const display_month = $derived(formatMonthDisplay(current_month));
+
+	const current_index = $derived(existing_months.findIndex((m) => m.id === current_month));
+	const is_at_oldest = $derived(current_index === existing_months.length - 1);
+	const can_go_back = $derived(!is_at_oldest || has_more_older_months);
+
+	onMount(async () => {
+		await loadMonths();
+	});
+
+	async function loadMonths() {
+		if (!household) return;
+
+		is_loading = true;
+
+		const months = await getMonths(household.id, 12);
+
+		if (months.length === 0) {
+			const current_budget_month_id = getCurrentBudgetMonthId(start_day);
+			const { startDate, endDate } = calculateMonthDates(current_budget_month_id, start_day);
+
+			await createMonth(household.id, startDate, endDate);
+
+			const reloaded = await getMonths(household.id, 12);
+			existing_months = reloaded.map((m) => ({
+				id: formatMonthIdFromTimestamp(m.endDate),
+				startDate: m.startDate,
+				endDate: m.endDate
+			}));
+			current_month = current_budget_month_id;
+
+			if (reloaded.length > 0) {
+				oldest_loaded_timestamp = reloaded[reloaded.length - 1].startDate;
+				const older_check = await getMonthsBefore(household.id, oldest_loaded_timestamp, 1);
+				has_more_older_months = older_check.length > 0;
+			} else {
+				has_more_older_months = false;
+			}
+		} else {
+			existing_months = months.map((m) => ({
+				id: formatMonthIdFromTimestamp(m.endDate),
+				startDate: m.startDate,
+				endDate: m.endDate
+			}));
+
+			const latest = existing_months.reduce((latest, m) => (m.id > latest.id ? m : latest));
+			current_month = latest.id;
+
+			oldest_loaded_timestamp = months[months.length - 1].startDate;
+			const older_check = await getMonthsBefore(household.id, oldest_loaded_timestamp, 1);
+			has_more_older_months = older_check.length > 0;
+		}
+
+		is_loading = false;
+	}
+
+	async function loadOlderMonths() {
+		if (!household || !oldest_loaded_timestamp) return;
+
+		const older_months = await getMonthsBefore(household.id, oldest_loaded_timestamp, 12);
+
+		if (older_months.length > 0) {
+			const mapped = older_months.map((m) => ({
+				id: formatMonthIdFromTimestamp(m.endDate),
+				startDate: m.startDate,
+				endDate: m.endDate
+			}));
+
+			existing_months = [...existing_months, ...mapped].sort((a, b) => b.id.localeCompare(a.id));
+			oldest_loaded_timestamp = older_months[older_months.length - 1].startDate;
+			has_more_older_months = older_months.length === 12;
+		} else {
+			has_more_older_months = false;
+		}
+	}
+
+	function formatMonthIdFromTimestamp(end_timestamp) {
+		const end_date = new Date(end_timestamp);
+		return `${end_date.getFullYear()}-${String(end_date.getMonth() + 1).padStart(2, '0')}`;
+	}
+
+	async function goToPreviousMonth() {
+		const current_index = existing_months.findIndex((m) => m.id === current_month);
+
+		// If at the oldest loaded month, try to load more
+		if (current_index === existing_months.length - 1 && has_more_older_months) {
+			await loadOlderMonths();
+		}
+
+		// Navigate to previous
+		const new_index = existing_months.findIndex((m) => m.id === current_month);
+		if (new_index < existing_months.length - 1) {
+			current_month = existing_months[new_index + 1].id;
+		}
+	}
+
+	function goToNextMonth() {
+		const current_index = existing_months.findIndex((m) => m.id === current_month);
+		if (current_index > 0) {
+			current_month = existing_months[current_index - 1].id;
+		}
+	}
+
+	async function handleCreateNextMonth() {
+		if (!household || !latest_month) return;
+
+		const next_month_id = getNextMonthId(latest_month.id);
+		const { startDate, endDate } = calculateMonthDates(next_month_id, start_day);
+
+		await createMonth(household.id, startDate, endDate);
+		await loadMonths();
+
+		current_month = next_month_id;
+	}
 </script>
 
 <div class="flex items-center gap-2 border-b border-b-grey-800 px-4 py-2">
-	<ButtonRound color="secondary" size="large" onclick={goToPreviousMonth}>
+	<ButtonRound
+		color="secondary"
+		size="large"
+		onclick={goToPreviousMonth}
+		disabled={!can_go_back || is_loading}
+	>
 		<Icon name="arrow-left" class="size-5" />
 	</ButtonRound>
 	<div class="w-full rounded-lg px-3 py-1.5 text-center ring ring-grey-400">
-		{display_month}
+		{#if !is_loading}
+			{display_month}
+		{:else}
+			<Icon name="spinner" class="size-4 animate-spin" />
+		{/if}
 	</div>
 	<ButtonRound
 		color={show_next_button ? 'secondary' : 'primary'}
 		size="large"
-		onclick={() => {
-			if (show_next_button) goToNextMonth();
-		}}
+		onclick={show_next_button ? goToNextMonth : handleCreateNextMonth}
+		disabled={(!show_next_button && !show_plus_button) || is_loading}
 	>
 		{#if show_next_button}
 			<Icon name="arrow-right" class="size-5" />
-		{:else if show_plus_button}
+		{:else}
 			<Icon name="calendar-plus" class="size-5" />
 		{/if}
 	</ButtonRound>

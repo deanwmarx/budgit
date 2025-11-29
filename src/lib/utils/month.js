@@ -1,4 +1,66 @@
 /**
+ * Calculate the start and end timestamps for a budget month
+ * @param {string} month_id - Format: YYYY-MM (represents the calendar month the budget period ENDS)
+ * @param {number} start_day - Day of month when budget cycle starts (1-31)
+ * @returns {{startDate: number, endDate: number}}
+ */
+export function calculateMonthDates(month_id, start_day) {
+	const [year, month] = month_id.split('-').map(Number);
+
+	// Start date: start_day of PREVIOUS calendar month at 00:00:00
+	const start_date = new Date(year, month - 1 - 1, start_day, 0, 0, 0, 0);
+
+	// End date: (start_day - 1) of THIS calendar month at 23:59:59
+	const end_date = new Date(year, month - 1, start_day - 1, 23, 59, 59, 999);
+
+	return {
+		startDate: start_date.getTime(),
+		endDate: end_date.getTime()
+	};
+}
+
+/**
+ * Get the current budget month ID based on today and the budget cycle start day
+ * @param {number} start_day - Day of month when budget cycle starts
+ * @returns {string} Month ID in YYYY-MM format
+ */
+export function getCurrentBudgetMonthId(start_day) {
+	const now = new Date();
+	const current_day = now.getDate();
+
+	let year = now.getFullYear();
+	let month = now.getMonth(); // 0-indexed
+
+	// If we've reached the start day or passed it, the budget month is NEXT calendar month
+	if (current_day >= start_day) {
+		month += 1;
+		if (month > 11) {
+			month = 0;
+			year += 1;
+		}
+	}
+
+	// Format as YYYY-MM (month + 1 because getMonth is 0-indexed)
+	return `${year}-${String(month + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Check if the next budget month can be created
+ * @param {string} latest_month_id - The latest existing month ID
+ * @param {number} start_day - Budget cycle start day
+ * @returns {boolean}
+ */
+export function canCreateNextMonth(latest_month_id, start_day) {
+	const [year, month] = latest_month_id.split('-').map(Number);
+
+	// The next month would start on start_day of THIS calendar month
+	const next_start_date = new Date(year, month - 1, start_day, 0, 0, 0, 0);
+	const now = new Date();
+
+	return now >= next_start_date;
+}
+
+/**
  * Month utility functions for budget cycle management
  */
 

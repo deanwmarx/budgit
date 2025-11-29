@@ -17,6 +17,7 @@ export {
 export {
 	createHousehold,
 	getHouseholds,
+	getHousehold,
 	updateHousehold,
 	deleteHousehold,
 	addMember,
@@ -28,6 +29,7 @@ export {
 export {
 	createMonth,
 	getMonths,
+	getMonthsBefore,
 	getMonth,
 	updateMonth,
 	deleteMonth,
