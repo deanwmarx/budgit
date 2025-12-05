@@ -12,7 +12,8 @@ const PREF_KEYS = {
 	USER_NAME: 'current_user_name',
 	HOUSEHOLD_ID: 'current_household_id',
 	LAST_HOUSEHOLD_ID: 'last_household_id',
-	HOUSEHOLD_NAME: 'current_household_name'
+	HOUSEHOLD_NAME: 'current_household_name',
+	IS_ONBOARDED: 'is_onboarded'
 };
 
 /**
@@ -61,6 +62,9 @@ class AppState {
 	/** @type {string | null} */
 	current_month_id = $state(null);
 
+	/** @type {boolean} */
+	current_onboarded = $state(false);
+
 	/**
 	 * Initialize the app - load saved preferences and setup database
 	 */
@@ -93,6 +97,10 @@ class AppState {
 			if (last_household_id) {
 				this.last_household_id = last_household_id;
 			}
+
+			// Load onboarding flag
+			const { value: onboarded_flag } = await Preferences.get({ key: PREF_KEYS.IS_ONBOARDED });
+			this.current_onboarded = onboarded_flag === 'true';
 
 			if (default_user_id && default_user_email && default_user_name) {
 				this.current_user_id = default_user_id;
@@ -208,6 +216,27 @@ class AppState {
 
 		await Preferences.set({ key: PREF_KEYS.HOUSEHOLD_ID, value: household_id });
 		await Preferences.set({ key: PREF_KEYS.HOUSEHOLD_NAME, value: household_name });
+
+		// Mark as onboarded once a household is selected
+		try {
+			await Preferences.set({ key: PREF_KEYS.IS_ONBOARDED, value: 'true' });
+			this.current_onboarded = true;
+		} catch (e) {
+			console.error('Failed to persist onboarded flag:', e);
+		}
+	}
+
+	/**
+	 * Set onboarding flag in state and persist to preferences
+	 * @param {boolean} flag
+	 */
+	async setOnboarded(flag) {
+		this.current_onboarded = !!flag;
+		try {
+			await Preferences.set({ key: PREF_KEYS.IS_ONBOARDED, value: String(this.current_onboarded) });
+		} catch (e) {
+			console.error('Failed to save onboarding flag:', e);
+		}
 	}
 
 	/**

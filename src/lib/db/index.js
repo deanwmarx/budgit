@@ -28,6 +28,7 @@ export {
 } from './households.js';
 export {
 	createMonth,
+	getOrCreateMonth,
 	getMonths,
 	getMonthsBefore,
 	getMonth,

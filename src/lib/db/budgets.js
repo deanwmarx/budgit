@@ -3,6 +3,19 @@ import { getDB, trackDeviceActivity } from './connection.js';
 // CRUD functions for months table
 
 /**
+ * Generate a semantic month ID from an end date timestamp.
+ * The month ID is YYYY-MM format based on the calendar month the budget period ENDS in.
+ * @param {number} end_date - The end date timestamp
+ * @returns {string} Month ID in YYYY-MM format (e.g., "2025-10")
+ */
+function generateMonthId(end_date) {
+	const date = new Date(end_date);
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	return `${year}-${month}`;
+}
+
+/**
  * Create a new month.
  * @param {string} household_id - The household ID
  * @param {number} start_date - The start date timestamp
@@ -13,9 +26,21 @@ export async function createMonth(household_id, start_date, end_date) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
-	const id = `month-${crypto.randomUUID()}`;
+	// Generate semantic month ID from end date (YYYY-MM format per spec)
+	const id = generateMonthId(end_date);
 	const created_at = Date.now();
 	const updated_at = created_at;
+
+	// Check if month already exists for this household
+	const existing = await db.query(
+		'SELECT * FROM months WHERE id = ? AND householdId = ?',
+		[id, household_id]
+	);
+	
+	if (existing.values && existing.values.length > 0) {
+		// Month already exists, return it
+		return existing.values[0];
+	}
 
 	await db.run(
 		'INSERT INTO months (id, householdId, startDate, endDate, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)',
@@ -31,6 +56,32 @@ export async function createMonth(household_id, start_date, end_date) {
 		createdAt: created_at,
 		updatedAt: updated_at
 	};
+}
+
+/**
+ * Get or create a month by ID for a household.
+ * @param {string} household_id - The household ID
+ * @param {string} month_id - The month ID in YYYY-MM format
+ * @param {number} start_date - The start date timestamp (used if creating)
+ * @param {number} end_date - The end date timestamp (used if creating)
+ * @returns {Promise<{id: string, householdId: string, startDate: number, endDate: number, createdAt: number, updatedAt: number}>} The month object
+ */
+export async function getOrCreateMonth(household_id, month_id, start_date, end_date) {
+	const db = getDB();
+	if (!db) throw new Error('Database not initialized');
+
+	// Check if month exists
+	const existing = await db.query(
+		'SELECT * FROM months WHERE id = ? AND householdId = ?',
+		[month_id, household_id]
+	);
+	
+	if (existing.values && existing.values.length > 0) {
+		return existing.values[0];
+	}
+
+	// Create the month
+	return createMonth(household_id, start_date, end_date);
 }
 
 /**
@@ -193,13 +244,13 @@ export async function getBudget(month_id, group_name) {
 /**
  * Delete a budget.
  * @param {string} month_id - The month ID
- * @param {string} group_name - The budget group name
+ * @param {string} budget_id - The budget ID
  * @returns {Promise<void>}
  */
-export async function deleteBudget(month_id, group_name) {
+export async function deleteBudget(month_id, budget_id) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
-	await db.run('DELETE FROM budgets WHERE monthId = ? AND groupName = ?', [month_id, group_name]);
+	await db.run('DELETE FROM budgets WHERE monthId = ? AND id = ?', [month_id, budget_id]);
 	await trackDeviceActivity();
 }

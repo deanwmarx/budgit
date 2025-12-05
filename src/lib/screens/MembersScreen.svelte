@@ -14,7 +14,6 @@
 	import { getMemberColors, formatRelativeDate } from '$lib/utils/helpers';
 	import { onMount } from 'svelte';
 	import Modal from '$comps/groups/Modal.svelte';
-	import PrettyJSON from '$comps/elements/debugging/PrettyJSON.svelte';
 
 	let members = $state([]);
 	let edit_sheet_open = $state(false);
@@ -38,6 +37,8 @@
 	let new_member_role = $state('member');
 	let new_member_color = $state('');
 
+	const current_household_id = $derived(appState.current_household_id);
+
 	// Generate color options
 	const color_options = getMemberColors()
 		.filter((color) => !['slate', 'gray', 'zinc'].includes(color))
@@ -48,8 +49,19 @@
 		}));
 
 	onMount(async () => {
-		members = await getMembers(appState.current_household_id);
+		members = await getMembers(current_household_id);
 		updateHeaderMode();
+	});
+
+	$effect(() => {
+		current_household_id;
+
+		// Reload members when household changes
+		onMount(async () => {
+			members = await getMembers(current_household_id);
+			selected_members = [];
+			updateHeaderMode();
+		});
 	});
 
 	function updateHeaderMode() {

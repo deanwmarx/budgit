@@ -16,7 +16,7 @@
 
 	let existing_months = $state([]);
 	let is_loading = $state(true);
-	let oldest_loaded_timestamp = $state(null);
+	let oldest_loaded_timestamp = $state(/** @type {number|null} */ (null));
 	let has_more_older_months = $state(true);
 
 	const household = $derived(appState.current_household);
@@ -33,8 +33,29 @@
 	);
 
 	const is_latest_month = $derived(latest_month && current_month === latest_month.id);
-	const show_plus_button = $derived(is_latest_month && can_create_next);
-	const show_next_button = $derived(!is_latest_month);
+
+	// Is today on or after the household budget cycle start day?
+	const is_on_or_after_start_day = $derived(new Date().getDate() >= start_day);
+	// Show the "+" create button when either:
+	//  - we have no months loaded (onboarding / first-run), or
+	//  - the currently selected month is the latest and creation is allowed
+	// Show the "+" create button when either there are no months at all,
+	// or the currently selected month is the latest (i.e. no future months exist).
+	// We still respect `can_create_next` by disabling the button when creation
+	// is not allowed.
+	const show_plus_button = $derived(
+		existing_months.length === 0 ? is_on_or_after_start_day : is_latest_month && can_create_next
+	);
+
+	// Show the "next" navigation button only when there are months and the
+	// selected month is not the latest one (i.e. there is a future month to go to).
+	const show_next_button = $derived(existing_months.length > 0 && !is_latest_month);
+
+	// Disable rules for the + button: when there are months, respect can_create_next;
+	// when there are no months, use the start-day rule.
+	const plus_disabled = $derived(
+		existing_months.length === 0 ? !is_on_or_after_start_day : !can_create_next
+	);
 	const display_month = $derived(formatMonthDisplay(current_month));
 
 	const current_index = $derived(existing_months.findIndex((m) => m.id === current_month));
@@ -53,29 +74,21 @@
 		const months = await getMonths(household.id, 12);
 
 		if (months.length === 0) {
+			// Do not auto-create a month row on initial load. Just set the current month
+			// label to the calculated budget month. Actual month rows will be created
+			// only when the user explicitly creates a month or when a DB operation
+			// requires a canonical month id (e.g. adding a budget will create the month).
 			const current_budget_month_id = getCurrentBudgetMonthId(start_day);
-			const { startDate, endDate } = calculateMonthDates(current_budget_month_id, start_day);
 
-			await createMonth(household.id, startDate, endDate);
-
-			const reloaded = await getMonths(household.id, 12);
-			existing_months = reloaded.map((m) => ({
-				id: formatMonthIdFromTimestamp(m.endDate),
-				startDate: m.startDate,
-				endDate: m.endDate
-			}));
+			existing_months = [];
 			current_month = current_budget_month_id;
-
-			if (reloaded.length > 0) {
-				oldest_loaded_timestamp = reloaded[reloaded.length - 1].startDate;
-				const older_check = await getMonthsBefore(household.id, oldest_loaded_timestamp, 1);
-				has_more_older_months = older_check.length > 0;
-			} else {
-				has_more_older_months = false;
-			}
+			oldest_loaded_timestamp = null;
+			has_more_older_months = false;
 		} else {
+			// Month IDs are now stored as YYYY-MM in the database (per spec)
+			// so we can use them directly
 			existing_months = months.map((m) => ({
-				id: formatMonthIdFromTimestamp(m.endDate),
+				id: m.id,
 				startDate: m.startDate,
 				endDate: m.endDate
 			}));
@@ -97,8 +110,9 @@
 		const older_months = await getMonthsBefore(household.id, oldest_loaded_timestamp, 12);
 
 		if (older_months.length > 0) {
+			// Month IDs are now stored as YYYY-MM in the database (per spec)
 			const mapped = older_months.map((m) => ({
-				id: formatMonthIdFromTimestamp(m.endDate),
+				id: m.id,
 				startDate: m.startDate,
 				endDate: m.endDate
 			}));
@@ -109,11 +123,6 @@
 		} else {
 			has_more_older_months = false;
 		}
-	}
-
-	function formatMonthIdFromTimestamp(end_timestamp) {
-		const end_date = new Date(end_timestamp);
-		return `${end_date.getFullYear()}-${String(end_date.getMonth() + 1).padStart(2, '0')}`;
 	}
 
 	async function goToPreviousMonth() {
@@ -171,7 +180,7 @@
 		color={show_next_button ? 'secondary' : 'primary'}
 		size="large"
 		onclick={show_next_button ? goToNextMonth : handleCreateNextMonth}
-		disabled={(!show_next_button && !show_plus_button) || is_loading}
+		disabled={((!show_next_button && !show_plus_button) || is_loading) || (show_plus_button && !can_create_next)}
 	>
 		{#if show_next_button}
 			<Icon name="arrow-right" class="size-5" />

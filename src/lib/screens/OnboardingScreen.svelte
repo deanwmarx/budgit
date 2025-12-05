@@ -94,6 +94,12 @@
 			const selected = appState.households.find((h) => h.id === selected_household_id);
 			if (selected) {
 				await appState.setHousehold(selected.id, selected.name);
+				// Mark onboarding complete
+				try {
+					await appState.setOnboarded(true);
+				} catch (e) {
+					// ignore
+				}
 				console.log('Household selected!');
 			}
 		} catch (err) {
@@ -128,6 +134,12 @@
 
 			// Update app state
 			await appState.setHousehold(household.id, household.name);
+			// Mark onboarding complete
+			try {
+				await appState.setOnboarded(true);
+			} catch (e) {
+				// ignore
+			}
 			appState.addHousehold(household.id, household.name, 'admin');
 
 			console.log('Household created!');

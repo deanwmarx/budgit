@@ -3,6 +3,7 @@
 
 	/**
 	 * @typedef {Object} ButtonIconProps
+	 * @property {'button' | 'submit'} [type]
 	 * @property {boolean} [disabled]
 	 * @property {string} [title]
 	 * @property {string} [href]
@@ -14,6 +15,7 @@
 
 	/** @type {ButtonIconProps & { [key: string]: any }} */
 	let {
+		type = 'button',
 		disabled = $bindable(false),
 		title = '',
 		size = 'large',
@@ -24,7 +26,7 @@
 </script>
 
 <button
-	type="button"
+	{type}
 	{...rest}
 	{disabled}
 	{title}
