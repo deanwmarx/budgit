@@ -70,7 +70,7 @@
 
 <button
 	class="w-full appearance-none rounded-lg border bg-grey-800 p-2.5 outline-0 transition-all duration-300 active:bg-grey-700 {is_selected
-		? 'border-primary-800 bg-grey-700! ring-2 ring-primary-800'
+		? 'border-primary-800 bg-secondary-700! ring-2 ring-primary-700'
 		: 'border-grey-900 active:border-grey-800'}"
 	onclick={handleClick}
 	onpointerdown={handlePointerDown}

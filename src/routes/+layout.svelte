@@ -166,7 +166,7 @@
 								? 'bg-primary-700 font-semibold'
 								: ''}"
 						>
-							<Icon name="arrows-left-right" class="size-4" />
+							<Icon name="arrows-left-right" class="size-4 -rotate-45" />
 							Transactions
 						</button>
 						<button

@@ -3,15 +3,16 @@
 	import ButtonRound from './buttons/ButtonRound.svelte';
 	import Icon from './icons/Icon.svelte';
 
-    /**
-     * @typedef {Object} Props
-     * @property {boolean} [sheet_open=false]
-     * @property {*} children
-     * @property {*} [onsubmit]
-     */
+	/**
+	 * @typedef {Object} Props
+	 * @property {boolean} [sheet_open=false]
+	 * @property {boolean} [can_delete=false]
+	 * @property {*} children
+	 * @property {*} [onsubmit]
+	 */
 
-    /** @type {Props} */
-	let { sheet_open = $bindable(false), children, onsubmit } = $props();
+	/** @type {Props} */
+	let { sheet_open = $bindable(false), can_delete = false, children, onsubmit } = $props();
 </script>
 
 {#if sheet_open}
@@ -33,9 +34,11 @@
 			<ButtonRound onclick={() => (sheet_open = false)} color="secondary">
 				<Icon name="xmark" class="size-5" />
 			</ButtonRound>
-			<ButtonRound type="submit" color="primary">
-				<Icon name="checkmark" class="size-5" />
-			</ButtonRound>
+			{#if can_delete}{:else}
+				<ButtonRound type="submit" color="primary">
+					<Icon name="checkmark" class="size-5" />
+				</ButtonRound>
+			{/if}
 		</div>
 	</form>
 {/if}

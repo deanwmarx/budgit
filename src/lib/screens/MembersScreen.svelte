@@ -243,7 +243,6 @@
 			No members found. Click the "+" button to add your first member.
 		</p>
 	{:else}
-		<!-- <PrettyJSON data={members} /> -->
 		{#each members as member}
 			<CardMember
 				color={member.color}

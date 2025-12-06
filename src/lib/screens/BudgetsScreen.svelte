@@ -1,10 +1,8 @@
 <script>
-	import PrettyJSON from '$comps/elements/debugging/PrettyJSON.svelte';
 	import { appState } from '$lib/appState.svelte';
 	import { getBudgets, setBudget, getMonths, createMonth, deleteBudget } from '$lib/db';
 	import { navigation } from '$lib/navigation.svelte';
 	import { onMount, untrack } from 'svelte';
-	import Page from '../../routes/+page.svelte';
 	import CardBudget from '$comps/groups/cards/CardBudget.svelte';
 	import Sheet from '$comps/elements/Sheet.svelte';
 	import InputLabel from '$comps/elements/inputs/descriptors/InputLabel.svelte';
@@ -12,6 +10,9 @@
 	import { formatRelativeDate } from '$lib/utils/helpers';
 	import { fade } from 'svelte/transition';
 	import Icon from '$comps/elements/icons/Icon.svelte';
+	import Modal from '$comps/groups/Modal.svelte';
+	import ButtonRound from '$comps/elements/buttons/ButtonRound.svelte';
+	import Button from '$comps/elements/buttons/Button.svelte';
 
 	let budgets = $state(/** @type {any[]} */ ([]));
 	let edit_sheet_open = $state(false);
@@ -30,8 +31,6 @@
 	// Add form fields
 	let new_budget_group_name = $state('');
 	let new_budget_amount = $state(0);
-	let new_budget_created_at = $state('');
-	let new_budget_updated_at = $state('');
 
 	const current_month_id = $derived(appState.current_month_id);
 
@@ -126,6 +125,19 @@
 		add_sheet_open = true;
 	}
 
+	/**
+	 * @param {any} budget
+	 */
+	function handleCardClick(budget) {
+		if (selected_budgets.length > 0) {
+			// In selection mode, toggle selection
+			handleLongPress(budget.id);
+		} else {
+			// Normal mode, open edit sheet
+			openEditSheet(budget);
+		}
+	}
+
 	async function handleUpdateBudget() {
 		if (!selected_budget) return;
 
@@ -160,6 +172,19 @@
 		} finally {
 			is_loading = false;
 		}
+	}
+
+	/**
+	 * @param {string} id
+	 */
+	function handleLongPress(id) {
+		// Toggle selection
+		if (selected_budgets.includes(id)) {
+			selected_budgets = selected_budgets.filter((budget_id) => budget_id !== id);
+		} else {
+			selected_budgets = [...selected_budgets, id];
+		}
+		updateHeaderMode();
 	}
 
 	async function handleDeleteBudgets() {
@@ -203,7 +228,9 @@
 					currency="R"
 					position="prefix"
 					thresholds={{ warning: 75, danger: 90 }}
-					onclick={() => openEditSheet(budget)}
+					is_selected={selected_budgets.includes(budget.id)}
+					on_long_press={() => handleLongPress(budget.id)}
+					onclick={() => handleCardClick(budget)}
 				/>
 			{/each}
 		</div>
@@ -225,7 +252,6 @@
 			name="budget-name"
 			placeholder="Enter budget name"
 			bind:value={budget_group_name}
-			focus_on_load={true}
 		/>
 	</div>
 
@@ -276,3 +302,24 @@
 		/>
 	</div>
 </Sheet>
+
+<Modal bind:is_active={delete_panel_open}>
+	<div class="space-y-4">
+		<h2 class="text-center text-xl font-semibold">
+			Delete budget{selected_budgets.length === 1 ? '' : 's'}?
+		</h2>
+		<p>
+			Are you sure you want to delete the selected budget{selected_budgets.length === 1 ? '' : 's'}?
+			This action cannot be undone.
+		</p>
+		<div class="flex justify-between gap-2">
+			<ButtonRound color="secondary" onclick={() => (delete_panel_open = false)}>
+				<Icon name="xmark" class="size-5" />
+			</ButtonRound>
+			<Button color="danger" onclick={handleDeleteBudgets}>
+				<Icon name="trash" class="size-5" />
+				Delete
+			</Button>
+		</div>
+	</div>
+</Modal>
