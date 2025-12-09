@@ -34,13 +34,14 @@ export {
 	getMonth,
 	updateMonth,
 	deleteMonth,
-	setBudget,
+	addBudget,
+	updateBudget,
 	getBudgets,
 	getBudget,
 	deleteBudget
 } from './budgets.js';
 export {
-	createTransaction,
+	addTransaction,
 	getTransactions,
 	getTransaction,
 	updateTransaction,

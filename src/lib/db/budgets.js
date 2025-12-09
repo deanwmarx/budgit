@@ -174,39 +174,64 @@ export async function deleteMonth(id) {
 // CRUD functions for budgets table
 
 /**
- * Create or update a budget for a month.
- * Uses UPSERT pattern since budgets have UNIQUE(monthId, groupName).
+ * Create a new budget for a month.
+ * Fails if a budget with the same monthId and groupName already exists (UNIQUE constraint).
  * @param {string} month_id - The month ID
  * @param {string} group_name - The budget group name
  * @param {number} amount - The budget amount (in cents)
- * @returns {Promise<{id: string, monthId: string, groupName: string, amount: number, createdAt: number, updatedAt: number}>} The created/updated budget object
+ * @returns {Promise<{id: string, monthId: string, groupName: string, amount: number, createdAt: number, updatedAt: number}>} The created budget object
  */
-export async function setBudget(month_id, group_name, amount) {
+export async function addBudget(month_id, group_name, amount) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
+
+	if (!group_name || !group_name.trim()) {
+		throw new Error('Budget group name is required');
+	}
 
 	const id = `budget-${crypto.randomUUID()}`;
 	const created_at = Date.now();
 	const updated_at = created_at;
 
-	// SQLite UPSERT: Insert or replace if conflict on UNIQUE constraint
+	// Plain INSERT - will fail on UNIQUE(monthId, groupName) constraint if duplicate
 	await db.run(
-		`INSERT INTO budgets (id, monthId, groupName, amount, createdAt, updatedAt) 
-		VALUES (?, ?, ?, ?, ?, ?)
-		ON CONFLICT(monthId, groupName) 
-		DO UPDATE SET amount = ?, updatedAt = ?`,
-		[id, month_id, group_name, amount, created_at, updated_at, amount, updated_at]
+		'INSERT INTO budgets (id, monthId, groupName, amount, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)',
+		[id, month_id, group_name.trim(), amount, created_at, updated_at]
 	);
 
 	await trackDeviceActivity();
 	return {
 		id,
 		monthId: month_id,
-		groupName: group_name,
+		groupName: group_name.trim(),
 		amount,
 		createdAt: created_at,
 		updatedAt: updated_at
 	};
+}
+
+/**
+ * Update an existing budget by ID.
+ * @param {string} budget_id - The budget ID
+ * @param {number} amount - The new budget amount (in cents)
+ * @returns {Promise<void>}
+ */
+export async function updateBudget(budget_id, amount) {
+	const db = getDB();
+	if (!db) throw new Error('Database not initialized');
+
+	const updated_at = Date.now();
+
+	const result = await db.run(
+		'UPDATE budgets SET amount = ?, updatedAt = ? WHERE id = ?',
+		[amount, updated_at, budget_id]
+	);
+
+	if (result.changes === 0) {
+		throw new Error(`Budget with id ${budget_id} not found`);
+	}
+
+	await trackDeviceActivity();
 }
 
 /**

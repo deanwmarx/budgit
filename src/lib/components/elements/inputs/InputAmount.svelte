@@ -72,7 +72,7 @@
 		flex h-full flex-row items-center gap-2 rounded-lg px-3 py-1.5 ring ring-grey-400 outline-0 transition-all
 		duration-300 outline-none focus-within:ring-2 focus-within:ring-primary-700 focus-within:outline-0
 		{disabled ? 'cursor-not-allowed opacity-60' : ''}
-		{invalid ? 'pointer-events-none ring-danger-600! focus-within:ring-danger-600!' : ''}
+		{invalid ? 'ring-danger-600! focus-within:ring-danger-600!' : ''}
 		{rest.class}
 	"
 	onclick={handleClick}

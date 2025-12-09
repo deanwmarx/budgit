@@ -71,20 +71,18 @@
 
 		is_loading = true;
 
-		const months = await getMonths(household.id, 12);
+		let months = await getMonths(household.id, 12);
 
 		if (months.length === 0) {
-			// Do not auto-create a month row on initial load. Just set the current month
-			// label to the calculated budget month. Actual month rows will be created
-			// only when the user explicitly creates a month or when a DB operation
-			// requires a canonical month id (e.g. adding a budget will create the month).
+			// Auto-create the current month so it always exists in the database
 			const current_budget_month_id = getCurrentBudgetMonthId(start_day);
+			const { startDate, endDate } = calculateMonthDates(current_budget_month_id, start_day);
 
-			existing_months = [];
-			current_month = current_budget_month_id;
-			oldest_loaded_timestamp = null;
-			has_more_older_months = false;
-		} else {
+			const created = await createMonth(household.id, startDate, endDate);
+			months = [created];
+		}
+
+		{
 			// Month IDs are now stored as YYYY-MM in the database (per spec)
 			// so we can use them directly
 			existing_months = months.map((m) => ({

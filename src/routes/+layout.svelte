@@ -11,6 +11,7 @@
 	import Header from '$comps/groups/Header.svelte';
 	import MonthSelector from '$comps/groups/MonthSelector.svelte';
 	import InputSelect from '$comps/elements/inputs/InputSelect.svelte';
+	import Error from '$comps/elements/debugging/Error.svelte';
 
 	let { children } = $props();
 	let drawer_open = $state(false);
@@ -123,6 +124,8 @@
 {#if show_layout}
 	<div class="flex h-screen flex-col">
 		<MonthSelector bind:current_month can_create={true} />
+
+		<Error />
 
 		{#if drawer_open}
 			<div

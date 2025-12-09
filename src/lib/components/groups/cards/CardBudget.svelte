@@ -44,7 +44,7 @@
 		press_timer = setTimeout(async () => {
 			// Trigger haptic feedback
 			try {
-				await Haptics.impact({ style: ImpactStyle.Medium });
+				await Haptics.impact({ style: ImpactStyle.Light });
 			} catch (e) {
 				console.log('Haptics not available:', e);
 			}

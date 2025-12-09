@@ -16,6 +16,7 @@
 	 * @property {string} [placeholder] - Placeholder text for the select input
 	 * @property {string} [name] - Name attribute for the select input
 	 * @property {string} [id] - ID attribute for the select input
+	 * @property {boolean} [invalid] - Whether the input is in an invalid state
 	 */
 
 	/** @type {Props} */
@@ -23,6 +24,7 @@
 		options,
 		selected_option = $bindable(),
 		placeholder = 'Choose a member',
+		invalid = false,
 		...rest
 	} = $props();
 </script>
@@ -38,6 +40,7 @@
 
 <InputSelect
 	{...rest}
+	{invalid}
 	{options}
 	{optionSnippet}
 	bind:value={selected_option}

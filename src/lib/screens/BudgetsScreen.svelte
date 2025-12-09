@@ -1,13 +1,15 @@
 <script>
 	import { appState } from '$lib/appState.svelte';
-	import { getBudgets, setBudget, getMonths, createMonth, deleteBudget } from '$lib/db';
+	import { getBudgets, addBudget, updateBudget, deleteBudget } from '$lib/db';
 	import { navigation } from '$lib/navigation.svelte';
 	import { onMount, untrack } from 'svelte';
 	import CardBudget from '$comps/groups/cards/CardBudget.svelte';
 	import Sheet from '$comps/elements/Sheet.svelte';
 	import InputLabel from '$comps/elements/inputs/descriptors/InputLabel.svelte';
+	import InputValidation from '$comps/elements/inputs/descriptors/InputValidation.svelte';
 	import InputText from '$comps/elements/inputs/InputText.svelte';
 	import { formatRelativeDate } from '$lib/utils/helpers';
+	import { createValidator, required } from '$lib/utils/validation.svelte';
 	import { fade } from 'svelte/transition';
 	import Icon from '$comps/elements/icons/Icon.svelte';
 	import Modal from '$comps/groups/Modal.svelte';
@@ -32,15 +34,17 @@
 	let new_budget_group_name = $state('');
 	let new_budget_amount = $state(0);
 
+	// Add form validation
+	const { errors, validate, setError, clearError } = createValidator({
+		name: [required('Budget name is required.')],
+		amount: [required('Amount is required.')]
+	});
+
 	const current_month_id = $derived(appState.current_month_id);
 
 	onMount(async () => {
-		// Resolve current month id (appState may hold a YYYY-MM label)
-		try {
-			const month_id = await resolveOrEnsureMonthId(current_month_id);
-			budgets = await getBudgets(month_id);
-		} catch (err) {
-			console.error('[Budgets] Failed to load budgets for month:', err);
+		if (current_month_id) {
+			budgets = await getBudgets(current_month_id);
 		}
 		updateHeaderMode();
 	});
@@ -49,53 +53,11 @@
 		current_month_id;
 
 		untrack(async () => {
-			try {
-				const month_id = await resolveOrEnsureMonthId(current_month_id);
-				budgets = await getBudgets(month_id);
-			} catch (err) {
-				console.error('[Budgets] Failed to load budgets for month change:', err);
+			if (current_month_id) {
+				budgets = await getBudgets(current_month_id);
 			}
 		});
 	});
-
-	/**
-	 * Resolve a month identifier from the appState value. If appState stores a label like "YYYY-MM",
-	 * try to find the corresponding month row for the current household. If none exists, create it.
-	 * Month IDs are now stored as YYYY-MM format directly in the database (per spec).
-	 * @param {string|null} month_key
-	 * @returns {Promise<string>} month id in YYYY-MM format
-	 */
-	async function resolveOrEnsureMonthId(month_key) {
-		if (!month_key) throw new Error('No month specified');
-
-		// Month IDs are now YYYY-MM format - validate format
-		if (!/^\d{4}-\d{2}$/.test(month_key)) {
-			throw new Error(`Invalid month format: ${month_key}. Expected YYYY-MM`);
-		}
-
-		// Need household context to lookup/create month
-		const household_id = appState.current_household_id;
-		if (!household_id) throw new Error('No household selected');
-
-		// Check if month exists by ID directly (since ID is now YYYY-MM)
-		const months = await getMonths(household_id, 0);
-		const match = months.find((m) => m.id === month_key);
-		if (match) return match.id;
-
-		// Not found: create a new month for that label
-		const [year_str, month_str] = month_key.split('-');
-		const year = Number(year_str);
-		const month = Number(month_str); // 1-12
-		if (!year || !month) throw new Error('Invalid month format');
-
-		// Calculate proper start/end dates based on budget cycle
-		const { calculateMonthDates } = await import('$lib/utils');
-		const start_day = appState.current_household?.budgetCycleStartDay || 1;
-		const { startDate, endDate } = calculateMonthDates(month_key, start_day);
-
-		const created = await createMonth(household_id, startDate, endDate);
-		return created.id;
-	}
 
 	function updateHeaderMode() {
 		if (selected_budgets.length > 0) {
@@ -139,9 +101,17 @@
 	}
 
 	async function handleUpdateBudget() {
-		if (!selected_budget) return;
+		if (!selected_budget || !current_month_id) return;
 
 		try {
+			is_loading = true;
+
+			await updateBudget(selected_budget.id, budget_amount);
+
+			budgets = await getBudgets(current_month_id);
+			edit_sheet_open = false;
+			selected_budgets = [];
+			updateHeaderMode();
 		} catch (e) {
 			console.error('Error updating budget:', e);
 		} finally {
@@ -150,25 +120,26 @@
 	}
 
 	async function handleAddBudget() {
+		if (!validate({ name: new_budget_group_name, amount: new_budget_amount })) return;
+		if (!current_month_id) return;
+
 		try {
 			is_loading = true;
 
-			if (!new_budget_group_name.trim() || !new_budget_amount) {
-				console.error('Budget name and amount are required.');
-			}
+			await addBudget(current_month_id, new_budget_group_name, new_budget_amount);
 
-			// Ensure we have a canonical month id (appState may store a YYYY-MM label)
-			const month_id = await resolveOrEnsureMonthId(appState.current_month_id);
-
-			await setBudget(month_id, new_budget_group_name, new_budget_amount);
-
-			// Refresh budgets list for the canonical month id
-			budgets = await getBudgets(month_id);
+			budgets = await getBudgets(current_month_id);
 			add_sheet_open = false;
 			selected_budgets = [];
 			updateHeaderMode();
 		} catch (error) {
-			console.error('[Budgets] Error adding budget:', error);
+			// Check for unique constraint violation
+			if (error instanceof Error && error.message.includes('UNIQUE constraint')) {
+				setError('name', 'A budget with this name already exists.');
+			} else {
+				// For unexpected errors, still show in the system error toast
+				appState.setError(error);
+			}
 		} finally {
 			is_loading = false;
 		}
@@ -188,18 +159,16 @@
 	}
 
 	async function handleDeleteBudgets() {
+		if (!current_month_id) return;
+
 		try {
 			is_loading = true;
 
-			// Ensure we have a canonical month id (appState may store a YYYY-MM label)
-			const month_id = await resolveOrEnsureMonthId(appState.current_month_id);
-
 			for (const budget_id of selected_budgets) {
-				await deleteBudget(month_id, budget_id);
+				await deleteBudget(current_month_id, budget_id);
 			}
 
-			// Refresh budgets list for the canonical month id
-			budgets = await getBudgets(month_id);
+			budgets = await getBudgets(current_month_id);
 			delete_panel_open = false;
 			selected_budgets = [];
 			updateHeaderMode();
@@ -216,7 +185,7 @@
 
 	{#if budgets.length === 0}
 		<p class="text-center text-sm">
-			No budgets found. Click the "+" button to add your first budget.
+			No budgets for this month.
 		</p>
 	{:else}
 		<div in:fade={{ duration: 300 }} class="space-y-4">
@@ -281,25 +250,35 @@
 	<h1 class="text-center text-xl leading-none font-medium">Add Budget</h1>
 
 	<div class="space-y-1">
-		<InputLabel text="Budget Name" for="new-budget-name" />
+		<InputLabel text="Budget Name" for="new-budget-name" invalid={!!errors.name} />
 		<InputText
 			id="new-budget-name"
 			name="new-budget-name"
 			placeholder="Enter budget name"
 			bind:value={new_budget_group_name}
 			focus_on_load={true}
+			invalid={!!errors.name}
+			oninput={() => clearError('name')}
 		/>
+		{#if errors.name}
+			<InputValidation text={errors.name} invalid={true} />
+		{/if}
 	</div>
 
 	<div class="space-y-1">
-		<InputLabel text="Max Amount" for="new-budget-amount" />
+		<InputLabel text="Max Amount" for="new-budget-amount" invalid={!!errors.amount} />
 		<InputText
 			id="new-budget-amount"
 			name="new-budget-amount"
 			type="number"
 			placeholder="Enter max amount"
 			bind:value={new_budget_amount}
+			invalid={!!errors.amount}
+			oninput={() => clearError('amount')}
 		/>
+		{#if errors.amount}
+			<InputValidation text={errors.amount} invalid={true} />
+		{/if}
 	</div>
 </Sheet>
 

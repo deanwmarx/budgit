@@ -15,7 +15,7 @@ import { getDB, trackDeviceActivity } from './connection.js';
  * @param {string} created_by - The user ID who created the transaction
  * @returns {Promise<{id: string, monthId: string, type: string, userId: string, name: string, amount: number, category: string, budgetGroup: string|null, date: number, createdAt: number, updatedAt: number}>} The created transaction object
  */
-export async function createTransaction(
+export async function addTransaction(
 	month_id,
 	type,
 	user_id,
