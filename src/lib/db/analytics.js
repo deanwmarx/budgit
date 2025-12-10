@@ -76,7 +76,7 @@ export async function getBudgetProgress(month_id) {
 		FROM budgets b
 		LEFT JOIN transactions t ON 
 			t.monthId = b.monthId AND 
-			t.budgetGroup = b.groupName AND 
+			t.budgetGroup = b.id AND 
 			t.type = 'expense' AND 
 			t.category = 'variable' AND 
 			t.deletedAt IS NULL

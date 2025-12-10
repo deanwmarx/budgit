@@ -1,6 +1,6 @@
 <script>
 	import { appState } from '$lib/appState.svelte';
-	import { getBudgets, addBudget, updateBudget, deleteBudget } from '$lib/db';
+	import { getBudgetsWithUsage, addBudget, updateBudget, deleteBudget } from '$lib/db';
 	import { navigation } from '$lib/navigation.svelte';
 	import { onMount, untrack } from 'svelte';
 	import CardBudget from '$comps/groups/cards/CardBudget.svelte';
@@ -15,6 +15,7 @@
 	import Modal from '$comps/groups/Modal.svelte';
 	import ButtonRound from '$comps/elements/buttons/ButtonRound.svelte';
 	import Button from '$comps/elements/buttons/Button.svelte';
+	import InputAmount from '$comps/elements/inputs/InputAmount.svelte';
 
 	let budgets = $state(/** @type {any[]} */ ([]));
 	let edit_sheet_open = $state(false);
@@ -41,10 +42,16 @@
 	});
 
 	const current_month_id = $derived(appState.current_month_id);
+	const household_budget_warning_threshold = $derived(
+		appState.household_budget_warning_threshold || 75
+	);
+	const household_budget_danger_threshold = $derived(
+		appState.household_budget_danger_threshold || 90
+	);
 
 	onMount(async () => {
 		if (current_month_id) {
-			budgets = await getBudgets(current_month_id);
+			budgets = await getBudgetsWithUsage(current_month_id);
 		}
 		updateHeaderMode();
 	});
@@ -54,7 +61,7 @@
 
 		untrack(async () => {
 			if (current_month_id) {
-				budgets = await getBudgets(current_month_id);
+				budgets = await getBudgetsWithUsage(current_month_id);
 			}
 		});
 	});
@@ -108,7 +115,7 @@
 
 			await updateBudget(selected_budget.id, budget_amount);
 
-			budgets = await getBudgets(current_month_id);
+			budgets = await getBudgetsWithUsage(current_month_id);
 			edit_sheet_open = false;
 			selected_budgets = [];
 			updateHeaderMode();
@@ -128,7 +135,7 @@
 
 			await addBudget(current_month_id, new_budget_group_name, new_budget_amount);
 
-			budgets = await getBudgets(current_month_id);
+			budgets = await getBudgetsWithUsage(current_month_id);
 			add_sheet_open = false;
 			selected_budgets = [];
 			updateHeaderMode();
@@ -168,7 +175,7 @@
 				await deleteBudget(current_month_id, budget_id);
 			}
 
-			budgets = await getBudgets(current_month_id);
+			budgets = await getBudgetsWithUsage(current_month_id);
 			delete_panel_open = false;
 			selected_budgets = [];
 			updateHeaderMode();
@@ -184,19 +191,20 @@
 	<h1 class="text-center text-xl leading-none font-medium">Budgets</h1>
 
 	{#if budgets.length === 0}
-		<p class="text-center text-sm">
-			No budgets for this month.
-		</p>
+		<p class="text-center text-sm">No budgets for this month.</p>
 	{:else}
 		<div in:fade={{ duration: 300 }} class="space-y-4">
 			{#each budgets as budget}
 				<CardBudget
 					title={budget.groupName}
-					used={250}
+					used={budget.used}
 					total={budget.amount}
 					currency="R"
 					position="prefix"
-					thresholds={{ warning: 75, danger: 90 }}
+					thresholds={{
+						warning: household_budget_warning_threshold,
+						danger: household_budget_danger_threshold
+					}}
 					is_selected={selected_budgets.includes(budget.id)}
 					on_long_press={() => handleLongPress(budget.id)}
 					onclick={() => handleCardClick(budget)}
@@ -226,11 +234,13 @@
 
 	<div class="space-y-1">
 		<InputLabel text="Max Amount" for="budget-amount" />
-		<InputText
+		<InputAmount
+			type="number"
 			id="budget-amount"
 			name="budget-amount"
-			type="number"
 			placeholder="Enter max amount"
+			currency="R"
+			position="prefix"
 			bind:value={budget_amount}
 		/>
 	</div>
@@ -267,11 +277,13 @@
 
 	<div class="space-y-1">
 		<InputLabel text="Max Amount" for="new-budget-amount" invalid={!!errors.amount} />
-		<InputText
+		<InputAmount
 			id="new-budget-amount"
 			name="new-budget-amount"
 			type="number"
 			placeholder="Enter max amount"
+			currency="R"
+			position="prefix"
 			bind:value={new_budget_amount}
 			invalid={!!errors.amount}
 			oninput={() => clearError('amount')}

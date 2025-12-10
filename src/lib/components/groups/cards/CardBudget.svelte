@@ -95,11 +95,11 @@
 				<Icon name="scales" class="size-4.5" />
 				<span class="inline-flex items-center gap-1 leading-none">
 					<span
-						class="text-xs font-medium {usage_percentage >= thresholds.danger
-							? 'text-danger-500'
+						class="text-sm font-medium {usage_percentage >= thresholds.danger
+							? 'text-danger-400'
 							: usage_percentage >= thresholds.warning
-								? 'text-warning-500'
-								: 'text-success-500'}"
+								? 'text-warning-400'
+								: 'text-success-400'}"
 					>
 						{position === 'prefix' ? currency : ''}{used}{position === 'suffix' ? currency : ''}
 					</span>

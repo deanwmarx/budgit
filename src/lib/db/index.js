@@ -37,6 +37,7 @@ export {
 	addBudget,
 	updateBudget,
 	getBudgets,
+	getBudgetsWithUsage,
 	getBudget,
 	deleteBudget
 } from './budgets.js';

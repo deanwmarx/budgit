@@ -44,6 +44,35 @@
 		{ value: 'one_time', label: 'Once-off', icon: 'money' }
 	];
 
+	// Filter options
+	const type_filter_options = [
+		{ value: '', label: 'All' },
+		{ value: 'expense', label: 'Expense' },
+		{ value: 'income', label: 'Income' }
+	];
+
+	const all_category_filter_options = [
+		{ value: '', label: 'All' },
+		{ value: 'variable', label: 'Variable' },
+		{ value: 'incidental', label: 'Incidental' },
+		{ value: 'fixed', label: 'Fixed' },
+		{ value: 'salary', label: 'Salary' },
+		{ value: 'one_time', label: 'Once-off' }
+	];
+
+	const expense_category_filter_options = [
+		{ value: '', label: 'All' },
+		{ value: 'variable', label: 'Variable' },
+		{ value: 'incidental', label: 'Incidental' },
+		{ value: 'fixed', label: 'Fixed' }
+	];
+
+	const income_category_filter_options = [
+		{ value: '', label: 'All' },
+		{ value: 'salary', label: 'Salary' },
+		{ value: 'one_time', label: 'Once-off' }
+	];
+
 	let transactions = $state(/** @type {any[]} */ ([]));
 	let edit_sheet_open = $state(false);
 	let add_sheet_open = $state(false);
@@ -51,6 +80,30 @@
 	let selected_transactions = $state(/** @type {any[]}*/ ([]));
 	let selected_transaction = $state(/** @type {any} */ (null));
 	let is_loading = $state(false);
+
+	// Filter state
+	let filter_type = $state(/** @type {'' | 'expense' | 'income'} */ (''));
+	let filter_category = $state(
+		/** @type {'' | 'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary'} */ ('')
+	);
+
+	// Derived category filter options based on selected type
+	const category_filter_options = $derived(
+		filter_type === 'expense'
+			? expense_category_filter_options
+			: filter_type === 'income'
+				? income_category_filter_options
+				: all_category_filter_options
+	);
+
+	// Filtered transactions based on selected filters
+	const filtered_transactions = $derived(
+		transactions.filter((t) => {
+			const type_match = !filter_type || t.type === filter_type;
+			const category_match = !filter_category || t.category === filter_category;
+			return type_match && category_match;
+		})
+	);
 
 	// Edit form fields
 	let transaction_name = $state('');
@@ -141,6 +194,13 @@
 			clearError('budget');
 			new_transaction_budget_group = '';
 		}
+	});
+
+	// Reset category filter when type filter changes to avoid invalid combinations
+	$effect(() => {
+		filter_type;
+		// Reset category filter when type changes
+		filter_category = '';
 	});
 
 	// Clear validation errors when values change
@@ -343,22 +403,51 @@
 	{#if transactions.length === 0}
 		<p class="text-center text-sm">No transactions for this month.</p>
 	{:else}
-		<div in:fade={{ duration: 300 }} class="space-y-4">
-			{#each transactions as transaction}
-				{@const member = members.find((m) => m.userId === transaction.userId)}
-				<CardTransaction
-					title={transaction.name}
-					amount={{ currency: 'R', position: 'prefix', value: transaction.amount }}
-					date={new Date(transaction.date).toISOString()}
-					category={transaction.category}
-					type={transaction.type}
-					member={{ name: member?.name ?? transaction.userId, color: member?.color ?? 'blue' }}
-					is_selected={selected_transactions.includes(transaction.id)}
-					on_long_press={() => handleLongPress(transaction.id)}
-					onclick={() => handleCardClick(transaction)}
+		<div class="flex gap-4">
+			<div class="flex-1 space-y-1">
+				<!-- Type filter (income or expense) -->
+				<InputLabel text="Type" for="type-filter" />
+				<InputSelect
+					id="type-filter"
+					name="type-filter"
+					placeholder="All"
+					options={type_filter_options}
+					bind:value={filter_type}
 				/>
-			{/each}
+			</div>
+			<div class="flex-1 space-y-1">
+				<!-- Category filter (salary or one-time if income and variable fixed or incidental if expense) -->
+				<InputLabel text="Category" for="category-filter" />
+				<InputSelect
+					id="category-filter"
+					name="category-filter"
+					placeholder="All"
+					options={category_filter_options}
+					bind:value={filter_category}
+				/>
+			</div>
 		</div>
+
+		{#if filtered_transactions.length === 0}
+			<p class="text-center text-sm">No transactions match the selected filters.</p>
+		{:else}
+			<div in:fade={{ duration: 300 }} class="space-y-4">
+				{#each filtered_transactions as transaction}
+					{@const member = members.find((m) => m.userId === transaction.userId)}
+					<CardTransaction
+						title={transaction.name}
+						amount={{ currency: 'R', position: 'prefix', value: transaction.amount }}
+						date={new Date(transaction.date).toISOString()}
+						category={transaction.category}
+						type={transaction.type}
+						member={{ name: member?.name ?? transaction.userId, color: member?.color ?? 'blue' }}
+						is_selected={selected_transactions.includes(transaction.id)}
+						on_long_press={() => handleLongPress(transaction.id)}
+						onclick={() => handleCardClick(transaction)}
+					/>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </div>
 

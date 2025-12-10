@@ -141,3 +141,38 @@ export function getColorBgClass(color_name) {
 		COLOR_TO_BG_CLASS[/** @type {keyof typeof COLOR_TO_BG_CLASS} */ (color_name)] || 'bg-grey-500'
 	);
 }
+
+/**
+ * Format a number as currency with proper thousand separators
+ * Uses spaces as thousand separators (SA standard)
+ * @param {number} value - The numeric value to format
+ * @param {Object} [options] - Formatting options
+ * @param {string} [options.currency='R'] - Currency symbol
+ * @param {'prefix' | 'suffix'} [options.position='prefix'] - Position of the currency symbol
+ * @param {number} [options.decimals=0] - Number of decimal places (0 for whole numbers)
+ * @param {boolean} [options.showSign=false] - Whether to show +/- sign
+ * @param {'income' | 'expense' | null} [options.type=null] - Transaction type for sign
+ * @returns {string} Formatted currency string
+ */
+export function formatCurrency(
+	value,
+	{ currency = 'R', position = 'prefix', decimals = 0, showSign = false, type = null } = {}
+) {
+	// Format the number with spaces as thousand separators
+	const formatted_value = value
+		.toFixed(decimals)
+		.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+	// Determine the sign
+	let sign = '';
+	if (showSign && type) {
+		sign = type === 'income' ? '+' : '-';
+	}
+
+	// Build the formatted string
+	if (position === 'prefix') {
+		return `${sign}${currency} ${formatted_value}`;
+	} else {
+		return `${sign}${formatted_value} ${currency}`;
+	}
+}

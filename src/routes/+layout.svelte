@@ -16,7 +16,9 @@
 	let { children } = $props();
 	let drawer_open = $state(false);
 	let fab_menu_is_active = $state(false);
-	let current_month = $state('2025-11');
+	let current_month = $state('');
+	let budget_warning_threshold = $state(75);
+	let budget_danger_threshold = $state(90);
 
 	// Derived from app state
 	let households = $derived(

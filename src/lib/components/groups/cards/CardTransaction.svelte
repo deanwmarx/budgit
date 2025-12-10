@@ -2,7 +2,7 @@
 	import Badge from '$comps/elements/badges/Badge.svelte';
 	import Icon from '$comps/elements/icons/Icon.svelte';
 	import MemberColor from '$comps/elements/members/MemberColor.svelte';
-	import { formatRelativeDate } from '$lib/utils/helpers';
+	import { formatRelativeDate, formatCurrency } from '$lib/utils/helpers';
 	import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 	/**
@@ -104,8 +104,8 @@
 	onpointerleave={handlePointerUp}
 >
 	<article class="flex flex-col gap-2">
-		<div class="flex justify-between gap-2">
-			<span class="line-clamp-1 text-lg leading-none">{title}</span>
+		<div class="flex items-start justify-between gap-2">
+			<span class="line-clamp-2 text-left text-lg leading-5">{title}</span>
 			<Badge>
 				<Icon name={CATEGORY_ICONS[category]} class="size-4" />
 				<span class="leading-none capitalize">{category}</span>
@@ -121,18 +121,15 @@
 			</div>
 			<span
 				class="text-lg leading-none font-semibold {type === 'income'
-					? 'text-green-400'
+					? 'text-success-400'
 					: 'text-danger-400'}"
 			>
-				{#if amount.position === 'prefix'}
-					{type === 'income'
-						? `+${amount.currency} ${amount.value}`
-						: `-${amount.currency} ${amount.value}`}
-				{:else}
-					{type === 'income'
-						? `+${amount.value} ${amount.currency}`
-						: `-${amount.value} ${amount.currency}`}
-				{/if}
+				{formatCurrency(amount.value, {
+					currency: amount.currency,
+					position: amount.position,
+					showSign: true,
+					type
+				})}
 			</span>
 		</div>
 	</article>

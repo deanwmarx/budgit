@@ -279,3 +279,37 @@ export async function deleteBudget(month_id, budget_id) {
 	await db.run('DELETE FROM budgets WHERE monthId = ? AND id = ?', [month_id, budget_id]);
 	await trackDeviceActivity();
 }
+
+/**
+ * Get all budgets for a month with their usage (spent amounts from transactions).
+ * Only counts variable expense transactions against budgets.
+ * @param {string} month_id - The month ID
+ * @returns {Promise<Array<{id: string, monthId: string, groupName: string, amount: number, createdAt: number, updatedAt: number, used: number}>>} Array of budget objects with used amounts
+ */
+export async function getBudgetsWithUsage(month_id) {
+	const db = getDB();
+	if (!db) return [];
+
+	const result = await db.query(
+		`SELECT 
+			b.id,
+			b.monthId,
+			b.groupName,
+			b.amount,
+			b.createdAt,
+			b.updatedAt,
+			COALESCE(SUM(t.amount), 0) as used
+		FROM budgets b
+		LEFT JOIN transactions t ON 
+			t.monthId = b.monthId AND 
+			t.budgetGroup = b.id AND 
+			t.type = 'expense' AND 
+			t.category = 'variable' AND 
+			t.deletedAt IS NULL
+		WHERE b.monthId = ?
+		GROUP BY b.id, b.monthId, b.groupName, b.amount, b.createdAt, b.updatedAt
+		ORDER BY b.groupName ASC`,
+		[month_id]
+	);
+	return result.values || [];
+}

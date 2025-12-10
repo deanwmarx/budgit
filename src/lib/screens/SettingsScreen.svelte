@@ -73,19 +73,13 @@
 						Number(budget_danger_threshold ?? 90)
 					);
 
-					await updateHousehold(
-						hid,
-						household_name,
-						Number(budget_cycle_start_day ?? 1),
-						Number(budget_warning_threshold ?? 75),
-						Number(budget_danger_threshold ?? 90)
-					);
-
 					appState.current_household = {
 						id: hid,
 						name: household_name,
 						budgetCycleStartDay: Number(budget_cycle_start_day ?? 1)
 					};
+					appState.household_budget_warning_threshold = Number(budget_warning_threshold ?? 75);
+					appState.household_budget_danger_threshold = Number(budget_danger_threshold ?? 90);
 
 					// commit originals
 					original_household_name = household_name;
@@ -155,6 +149,5 @@
 			<InputLabel text="Budget Danger Threshold" for="danger-threshold" />
 			<InputSlider bind:value={budget_danger_threshold} variant="danger" />
 		</div>
-		{has_changes}
 	</Accordion>
 </div>

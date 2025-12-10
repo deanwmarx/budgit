@@ -8,16 +8,17 @@
 	 * @property {string} icon
 	 * @property {number} [warning_threshold=70]
 	 * @property {number} [danger_threshold=90]
+	 * @property {string} [class]
 	 */
 
 	/** @type {Props} */
-	let { percentage, label, icon, warning_threshold = 70, danger_threshold = 90 } = $props();
+	let { percentage, label, icon, warning_threshold = 70, danger_threshold = 90, ...rest } = $props();
 
 	const radius = 32;
 	const circumference = 2 * Math.PI * radius;
 </script>
 
-<div class="inline-flex w-auto flex-col items-center gap-2 rounded-xl bg-grey-900 py-3">
+<div class="inline-flex w-auto flex-col items-center gap-2 rounded-xl bg-grey-900 py-3 {rest.class ?? ''}">
 	<div class="flex gap-1">
 		<Icon name={icon} class="size-4" />
 		<span class="text-sm font-medium">{label}</span>

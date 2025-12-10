@@ -47,7 +47,7 @@ export async function getHouseholds() {
 /**
  * Get a household by ID.
  * @param {string} id - The household ID
- * @returns {Promise<{id: string, name: string, budgetCycleStartDay: number, createdAt: number, updatedAt: number} | null>} The household object or null if not found
+ * @returns {Promise<{id: string, name: string, budgetCycleStartDay: number, budgetWarningThreshold: number, budgetDangerThreshold: number, createdAt: number, updatedAt: number} | null>} The household object or null if not found
  */
 export async function getHousehold(id) {
 	const db = getDB();

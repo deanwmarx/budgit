@@ -62,6 +62,12 @@ class AppState {
 	/** @type {string | null} */
 	current_month_id = $state(null);
 
+	/** @type {number | null} */
+	household_budget_warning_threshold = $state(75);
+
+	/** @type {number | null} */
+	household_budget_danger_threshold = $state(90);
+
 	/** @type {boolean} */
 	current_onboarded = $state(false);
 
@@ -130,6 +136,8 @@ class AppState {
 							name: household.name,
 							budgetCycleStartDay: household.budgetCycleStartDay
 						};
+						this.household_budget_warning_threshold = household.budgetWarningThreshold ?? 75;
+						this.household_budget_danger_threshold = household.budgetDangerThreshold ?? 90;
 					}
 
 					this.is_initialized = true;
@@ -210,6 +218,8 @@ class AppState {
 				name: household.name,
 				budgetCycleStartDay: household.budgetCycleStartDay
 			};
+			this.household_budget_warning_threshold = household.budgetWarningThreshold ?? 75;
+			this.household_budget_danger_threshold = household.budgetDangerThreshold ?? 90;
 		}
 
 		this.is_initialized = true;
