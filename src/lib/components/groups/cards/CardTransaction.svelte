@@ -48,7 +48,7 @@
 
 	const CATEGORY_ICONS = {
 		variable: 'arrows-up-down',
-		fixed: 'lock-closed',
+		fixed: 'lock',
 		incidental: 'exclamation-triangle',
 		'one-time': 'calendar-days',
 		salary: 'money'

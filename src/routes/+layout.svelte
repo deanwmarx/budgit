@@ -191,18 +191,8 @@
 								? 'bg-primary-700 font-semibold'
 								: ''}"
 						>
-							<Icon name="wallet" class="size-4" />
+							<Icon name="building-blocks" class="size-4" />
 							Components
-						</button>
-						<button
-							onclick={() => navigate(SCREENS.NOTES)}
-							class="flex w-full items-center gap-2 px-4 py-1.5 text-left transition-colors duration-300 active:bg-grey-800 {navigation.current_screen ===
-							SCREENS.NOTES
-								? 'bg-primary-700 font-semibold'
-								: ''}"
-						>
-							<Icon name="wallet" class="size-4" />
-							Notes
 						</button>
 					</div>
 				</div>
