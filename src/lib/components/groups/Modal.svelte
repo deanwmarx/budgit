@@ -19,7 +19,7 @@
 		role="none"
 		transition:fade={{ duration: 200 }}
 	>
-		<div transition:fly={{ y: 20, duration: 200 }}>
+		<div transition:fly={{ y: 20, duration: 200 }} class="w-full">
 			<Panel>
 				{@render children()}
 			</Panel>

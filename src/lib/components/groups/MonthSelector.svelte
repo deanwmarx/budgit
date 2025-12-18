@@ -11,9 +11,11 @@
 		canCreateNextMonth,
 		getNextMonthId
 	} from '$lib/utils';
+	import Modal from './Modal.svelte';
 
 	let { current_month = $bindable() } = $props();
 
+	let show_create_month_modal = $state(false);
 	let existing_months = $state([]);
 	let is_loading = $state(true);
 	let oldest_loaded_timestamp = $state(/** @type {number|null} */ (null));
@@ -151,7 +153,7 @@
 		const next_month_id = getNextMonthId(latest_month.id);
 		const { startDate, endDate } = calculateMonthDates(next_month_id, start_day);
 
-		await createMonth(household.id, startDate, endDate);
+		await createMonth(household.id, startDate, endDate, latest_month.id);
 		await loadMonths();
 
 		current_month = next_month_id;
@@ -177,8 +179,10 @@
 	<ButtonRound
 		color={show_next_button ? 'secondary' : 'primary'}
 		size="large"
-		onclick={show_next_button ? goToNextMonth : handleCreateNextMonth}
-		disabled={((!show_next_button && !show_plus_button) || is_loading) || (show_plus_button && !can_create_next)}
+		onclick={show_next_button ? goToNextMonth : () => (show_create_month_modal = true)}
+		disabled={(!show_next_button && !show_plus_button) ||
+			is_loading ||
+			(show_plus_button && !can_create_next)}
 	>
 		{#if show_next_button}
 			<Icon name="arrow-right" class="size-5" />
@@ -187,3 +191,33 @@
 		{/if}
 	</ButtonRound>
 </div>
+
+<Modal bind:is_active={show_create_month_modal}>
+	<div class="space-y-4">
+		<h2 class="text-center text-lg leading-none font-medium">Create Month</h2>
+		<h1 class="text-center text-2xl leading-none font-medium">
+			{formatMonthDisplay(getNextMonthId(latest_month.id))}
+		</h1>
+
+		<p>
+			Your new month will be created and your fixed expenses and salaries will be copied over from
+			the previous month.
+		</p>
+
+		<div class="flex justify-between gap-2">
+			<ButtonRound color="secondary" size="large" onclick={() => (show_create_month_modal = false)}>
+				<Icon name="xmark" class="size-5" />
+			</ButtonRound>
+			<ButtonRound
+				color="primary"
+				size="large"
+				onclick={async () => {
+					await handleCreateNextMonth();
+					show_create_month_modal = false;
+				}}
+			>
+				<Icon name="checkmark" class="size-5" />
+			</ButtonRound>
+		</div>
+	</div>
+</Modal>

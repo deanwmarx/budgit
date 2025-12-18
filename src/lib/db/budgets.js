@@ -1,4 +1,5 @@
 import { getDB, trackDeviceActivity } from './connection.js';
+import { getPreviousMonthId } from '$lib/utils';
 
 // CRUD functions for months table
 
@@ -17,12 +18,14 @@ function generateMonthId(end_date) {
 
 /**
  * Create a new month.
+ * Also copies recurring transactions (salary incomes and fixed expenses) from the source month if provided.
  * @param {string} household_id - The household ID
  * @param {number} start_date - The start date timestamp
  * @param {number} end_date - The end date timestamp
+ * @param {string} [copy_from_month_id] - Optional month ID to copy recurring transactions from
  * @returns {Promise<{id: string, householdId: string, startDate: number, endDate: number, createdAt: number, updatedAt: number}>} The created month object
  */
-export async function createMonth(household_id, start_date, end_date) {
+export async function createMonth(household_id, start_date, end_date, copy_from_month_id) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
@@ -46,6 +49,33 @@ export async function createMonth(household_id, start_date, end_date) {
 		'INSERT INTO months (id, householdId, startDate, endDate, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)',
 		[id, household_id, start_date, end_date, created_at, updated_at]
 	);
+
+	// Copy salary incomes and fixed expenses from source month
+	const source_month_id = copy_from_month_id || getPreviousMonthId(id);
+	const recurring = await db.query(
+		`SELECT * FROM transactions 
+		 WHERE monthId = ? AND deletedAt IS NULL
+		   AND ((type = 'income' AND category = 'salary') OR (type = 'expense' AND category = 'fixed'))`,
+		[source_month_id]
+	);
+	for (const txn of recurring.values || []) {
+		await db.run(
+			'INSERT INTO transactions (id, monthId, type, userId, name, amount, category, budgetGroup, date, createdBy, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+			[`transaction-${crypto.randomUUID()}`, id, txn.type, txn.userId, txn.name, txn.amount, txn.category, txn.budgetGroup, start_date, txn.createdBy, created_at, created_at]
+		);
+	}
+
+	// Copy budgets from source month
+	const budgets = await db.query(
+		'SELECT * FROM budgets WHERE monthId = ?',
+		[source_month_id]
+	);
+	for (const budget of budgets.values || []) {
+		await db.run(
+			'INSERT INTO budgets (id, monthId, groupName, amount, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)',
+			[`budget-${crypto.randomUUID()}`, id, budget.groupName, budget.amount, created_at, created_at]
+		);
+	}
 
 	await trackDeviceActivity();
 	return {

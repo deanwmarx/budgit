@@ -125,7 +125,7 @@
 
 {#if show_layout}
 	<div class="flex h-screen flex-col">
-		<MonthSelector bind:current_month can_create={true} />
+		<MonthSelector bind:current_month />
 
 		<Error />
 

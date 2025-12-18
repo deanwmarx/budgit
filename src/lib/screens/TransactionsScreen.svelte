@@ -172,6 +172,22 @@
 		updateHeaderMode();
 	});
 
+	// Reload transactions when month changes
+	$effect(() => {
+		if (current_month_id) {
+			getTransactions(current_month_id).then((result) => {
+				transactions = result;
+			});
+			getBudgets(current_month_id).then((result) => {
+				budgets = result.map((b) => ({
+					...b,
+					label: b.groupName,
+					value: b.id
+				}));
+			});
+		}
+	});
+
 	$effect(() => {
 		new_transaction_type;
 
