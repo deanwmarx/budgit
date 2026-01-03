@@ -272,6 +272,7 @@ class AppState {
 		this.current_household = null;
 		this.current_household_id = null;
 		this.current_household_name = null;
+		this.current_month_id = null;
 		this.is_initialized = false;
 
 		// Clear only household preferences (keep user)

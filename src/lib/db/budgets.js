@@ -4,16 +4,27 @@ import { getPreviousMonthId } from '$lib/utils';
 // CRUD functions for months table
 
 /**
- * Generate a semantic month ID from an end date timestamp.
- * The month ID is YYYY-MM format based on the calendar month the budget period ENDS in.
+ * Generate a semantic month period from an end date timestamp.
  * @param {number} end_date - The end date timestamp
- * @returns {string} Month ID in YYYY-MM format (e.g., "2025-10")
+ * @returns {string} Month period in YYYY-MM format (e.g., "2025-10")
  */
-function generateMonthId(end_date) {
+function generateMonthPeriod(end_date) {
 	const date = new Date(end_date);
 	const year = date.getFullYear();
 	const month = String(date.getMonth() + 1).padStart(2, '0');
 	return `${year}-${month}`;
+}
+
+/**
+ * Generate a unique month ID from household ID and end date.
+ * Format: {householdId}-{YYYY-MM} to ensure uniqueness across households.
+ * @param {string} household_id - The household ID
+ * @param {number} end_date - The end date timestamp
+ * @returns {string} Unique month ID (e.g., "abc123-2025-10")
+ */
+function generateMonthId(household_id, end_date) {
+	const period = generateMonthPeriod(end_date);
+	return `${household_id}-${period}`;
 }
 
 /**
@@ -29,15 +40,15 @@ export async function createMonth(household_id, start_date, end_date, copy_from_
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
-	// Generate semantic month ID from end date (YYYY-MM format per spec)
-	const id = generateMonthId(end_date);
+	// Generate unique month ID: householdId-YYYY-MM
+	const id = generateMonthId(household_id, end_date);
 	const created_at = Date.now();
 	const updated_at = created_at;
 
-	// Check if month already exists for this household
+	// Check if month already exists (id is globally unique now)
 	const existing = await db.query(
-		'SELECT * FROM months WHERE id = ? AND householdId = ?',
-		[id, household_id]
+		'SELECT * FROM months WHERE id = ?',
+		[id]
 	);
 	
 	if (existing.values && existing.values.length > 0) {
@@ -89,21 +100,24 @@ export async function createMonth(household_id, start_date, end_date, copy_from_
 }
 
 /**
- * Get or create a month by ID for a household.
+ * Get or create a month by period for a household.
  * @param {string} household_id - The household ID
- * @param {string} month_id - The month ID in YYYY-MM format
+ * @param {string} month_period - The month period in YYYY-MM format (will be converted to composite ID)
  * @param {number} start_date - The start date timestamp (used if creating)
  * @param {number} end_date - The end date timestamp (used if creating)
  * @returns {Promise<{id: string, householdId: string, startDate: number, endDate: number, createdAt: number, updatedAt: number}>} The month object
  */
-export async function getOrCreateMonth(household_id, month_id, start_date, end_date) {
+export async function getOrCreateMonth(household_id, month_period, start_date, end_date) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
-	// Check if month exists
+	// Construct composite ID
+	const composite_id = `${household_id}-${month_period}`;
+
+	// Check if month exists by composite ID
 	const existing = await db.query(
-		'SELECT * FROM months WHERE id = ? AND householdId = ?',
-		[month_id, household_id]
+		'SELECT * FROM months WHERE id = ?',
+		[composite_id]
 	);
 	
 	if (existing.values && existing.values.length > 0) {

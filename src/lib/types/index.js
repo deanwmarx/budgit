@@ -42,7 +42,7 @@
 
 /**
  * @typedef {Object} Month
- * @property {string} id - Format: "YYYY-MM"
+ * @property {string} id - Format: "{householdId}-{YYYY-MM}" (composite key for global uniqueness)
  * @property {string} householdId
  * @property {string} startDate - ISO date string
  * @property {string} endDate - ISO date string

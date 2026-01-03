@@ -1,11 +1,24 @@
 /**
+ * Extract the YYYY-MM period from a composite month ID
+ * @param {string} month_id - Composite month ID (householdId-YYYY-MM) or plain YYYY-MM
+ * @returns {string} The YYYY-MM portion
+ */
+export function extractMonthPeriod(month_id) {
+	if (!month_id) return '';
+	// Match YYYY-MM at the end of the string
+	const match = month_id.match(/(\d{4}-\d{2})$/);
+	return match ? match[1] : month_id;
+}
+
+/**
  * Calculate the start and end timestamps for a budget month
- * @param {string} month_id - Format: YYYY-MM (represents the calendar month the budget period ENDS)
+ * @param {string} month_id - Format: YYYY-MM or householdId-YYYY-MM (represents the calendar month the budget period ENDS)
  * @param {number} start_day - Day of month when budget cycle starts (1-31)
  * @returns {{startDate: number, endDate: number}}
  */
 export function calculateMonthDates(month_id, start_day) {
-	const [year, month] = month_id.split('-').map(Number);
+	const period = extractMonthPeriod(month_id);
+	const [year, month] = period.split('-').map(Number);
 
 	// Start date: start_day of PREVIOUS calendar month at 00:00:00
 	const start_date = new Date(year, month - 1 - 1, start_day, 0, 0, 0, 0);
@@ -46,12 +59,13 @@ export function getCurrentBudgetMonthId(start_day) {
 
 /**
  * Check if the next budget month can be created
- * @param {string} latest_month_id - The latest existing month ID
+ * @param {string} latest_month_id - The latest existing month ID (YYYY-MM or householdId-YYYY-MM)
  * @param {number} start_day - Budget cycle start day
  * @returns {boolean}
  */
 export function canCreateNextMonth(latest_month_id, start_day) {
-	const [year, month] = latest_month_id.split('-').map(Number);
+	const period = extractMonthPeriod(latest_month_id);
+	const [year, month] = period.split('-').map(Number);
 
 	// The next month would start on start_day of THIS calendar month
 	const next_start_date = new Date(year, month - 1, start_day, 0, 0, 0, 0);
@@ -77,19 +91,23 @@ export function getCurrentMonthId() {
 
 /**
  * Navigate to the previous month
- * @param {string} month_id - Current month ID in YYYY-MM format
- * @returns {string} Previous month ID
+ * @param {string} month_id - Current month ID in YYYY-MM or householdId-YYYY-MM format
+ * @returns {string} Previous month ID (same format as input - preserves prefix if present)
  */
 export function getPreviousMonthId(month_id) {
-	const [year, month] = month_id.split('-').map(Number);
+	const period = extractMonthPeriod(month_id);
+	const prefix = month_id.slice(0, month_id.length - period.length);
+	const [year, month] = period.split('-').map(Number);
 
+	let new_period;
 	if (month === 1) {
 		// January -> December of previous year
-		return `${year - 1}-12`;
+		new_period = `${year - 1}-12`;
 	} else {
 		// Decrement month
-		return `${year}-${String(month - 1).padStart(2, '0')}`;
+		new_period = `${year}-${String(month - 1).padStart(2, '0')}`;
 	}
+	return prefix + new_period;
 }
 
 /**
@@ -98,15 +116,19 @@ export function getPreviousMonthId(month_id) {
  * @returns {string} Next month ID
  */
 export function getNextMonthId(month_id) {
-	const [year, month] = month_id.split('-').map(Number);
+	const period = extractMonthPeriod(month_id);
+	const prefix = month_id.slice(0, month_id.length - period.length);
+	const [year, month] = period.split('-').map(Number);
 
+	let new_period;
 	if (month === 12) {
 		// December -> January of next year
-		return `${year + 1}-01`;
+		new_period = `${year + 1}-01`;
 	} else {
 		// Increment month
-		return `${year}-${String(month + 1).padStart(2, '0')}`;
+		new_period = `${year}-${String(month + 1).padStart(2, '0')}`;
 	}
+	return prefix + new_period;
 }
 
 /**
@@ -121,13 +143,15 @@ export function isSameMonth(month_id_1, month_id_2) {
 
 /**
  * Format month ID for display
- * @param {string} month_id - Month ID in YYYY-MM format
+ * @param {string} month_id - Month ID in YYYY-MM or householdId-YYYY-MM format
  * @param {string} [start_date] - Optional start date for date range display
  * @param {string} [end_date] - Optional end date for date range display
  * @returns {string} Formatted month string (e.g., "October 2025" or "October 2025 (25 Sep - 24 Oct)")
  */
 export function formatMonthDisplay(month_id, start_date, end_date) {
-	const [year, month] = month_id.split('-').map(Number);
+	const period = extractMonthPeriod(month_id);
+	if (!period) return '';
+	const [year, month] = period.split('-').map(Number);
 	const date = new Date(year, month - 1, 1);
 	const month_name = date.toLocaleDateString('en-US', { month: 'long' });
 
@@ -147,14 +171,16 @@ export function formatMonthDisplay(month_id, start_date, end_date) {
 }
 
 /**
- * Compare two month IDs
- * @param {string} month_id_1 - First month ID
- * @param {string} month_id_2 - Second month ID
+ * Compare two month IDs (compares only the YYYY-MM portion)
+ * @param {string} month_id_1 - First month ID (YYYY-MM or householdId-YYYY-MM)
+ * @param {string} month_id_2 - Second month ID (YYYY-MM or householdId-YYYY-MM)
  * @returns {number} -1 if month_id_1 < month_id_2, 0 if equal, 1 if month_id_1 > month_id_2
  */
 export function compareMonths(month_id_1, month_id_2) {
-	if (month_id_1 < month_id_2) return -1;
-	if (month_id_1 > month_id_2) return 1;
+	const period_1 = extractMonthPeriod(month_id_1);
+	const period_2 = extractMonthPeriod(month_id_2);
+	if (period_1 < period_2) return -1;
+	if (period_1 > period_2) return 1;
 	return 0;
 }
 

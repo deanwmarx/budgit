@@ -233,7 +233,7 @@
 			{@render children()}
 		</main>
 
-		<div class="fixed bottom-15.5 left-1/2 z-10 -translate-x-1/2 transform">
+		<!-- <div class="fixed bottom-15.5 left-1/2 z-10 -translate-x-1/2 transform">
 			<FAB bind:is_active={fab_menu_is_active}>
 				<Button color="primary" onclick={() => (fab_menu_is_active = false)}>
 					<Icon name="arrows-up-down" class="size-6" />
@@ -244,7 +244,7 @@
 					Add Incidental Expense
 				</Button>
 			</FAB>
-		</div>
+		</div> -->
 		<Header bind:drawer_open mode={navigation.header_mode} onclick={navigation.header_onclick} />
 	</div>
 {:else}

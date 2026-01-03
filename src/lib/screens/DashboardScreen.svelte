@@ -50,6 +50,18 @@
 		try {
 			is_loading = true;
 
+			// Reset all data to prevent stale data from showing during load
+			budgets = [];
+			projected_savings = 'R 0.00';
+			actual_savings = 'R 0.00';
+			salary_incomes = '';
+			onceoff_incomes = '';
+			total_incomes = '';
+			fixed_expenses = '';
+			variable_expenses = '';
+			incidental_expenses = '';
+			total_expenses = '';
+
 			const [budgets_result, savings_result, incomes_result, expenses_result] = await Promise.all([
 				getBudgetsWithUsage(month_id),
 				getMonthSavings(month_id),

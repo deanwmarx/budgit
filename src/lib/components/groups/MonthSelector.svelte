@@ -1,5 +1,5 @@
 <script>
-	import { onMount, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import ButtonRound from '$comps/elements/buttons/ButtonRound.svelte';
 	import Icon from '$comps/elements/icons/Icon.svelte';
 	import { appState } from '$lib/appState.svelte.js';
@@ -9,7 +9,8 @@
 		getCurrentBudgetMonthId,
 		calculateMonthDates,
 		canCreateNextMonth,
-		getNextMonthId
+		getNextMonthId,
+		compareMonths
 	} from '$lib/utils';
 	import Modal from './Modal.svelte';
 
@@ -64,8 +65,32 @@
 	const is_at_oldest = $derived(current_index === existing_months.length - 1);
 	const can_go_back = $derived(!is_at_oldest || has_more_older_months);
 
-	onMount(async () => {
-		await loadMonths();
+	// Track the last loaded household to detect changes
+	let last_loaded_household_id = $state(/** @type {string|null} */ (null));
+
+	// Load months when household changes (including initial load)
+	$effect(() => {
+		const current_household = household;
+		const current_household_id = current_household?.id;
+		
+		console.log('[MonthSelector] Effect running:', { current_household_id, last_loaded_household_id });
+		
+		if (current_household_id && current_household_id !== last_loaded_household_id) {
+			console.log('[MonthSelector] Loading months for household:', current_household_id);
+			// Reset state for new household
+			existing_months = [];
+			oldest_loaded_timestamp = null;
+			has_more_older_months = true;
+			is_loading = true;
+			
+			// Update tracking variable (use untrack to avoid re-triggering)
+			untrack(() => {
+				last_loaded_household_id = current_household_id;
+			});
+			
+			// Load months for the new household
+			loadMonths();
+		}
 	});
 
 	async function loadMonths() {
@@ -73,35 +98,37 @@
 
 		is_loading = true;
 
-		let months = await getMonths(household.id, 12);
+		try {
+			let months = await getMonths(household.id, 12);
 
-		if (months.length === 0) {
-			// Auto-create the current month so it always exists in the database
-			const current_budget_month_id = getCurrentBudgetMonthId(start_day);
-			const { startDate, endDate } = calculateMonthDates(current_budget_month_id, start_day);
+			if (months.length === 0) {
+				// Auto-create the current month so it always exists in the database
+				const current_budget_month_id = getCurrentBudgetMonthId(start_day);
+				const { startDate, endDate } = calculateMonthDates(current_budget_month_id, start_day);
 
-			const created = await createMonth(household.id, startDate, endDate);
-			months = [created];
-		}
+				const created = await createMonth(household.id, startDate, endDate);
+				months = [created];
+			}
 
-		{
-			// Month IDs are now stored as YYYY-MM in the database (per spec)
-			// so we can use them directly
+			// Month IDs are stored as householdId-YYYY-MM in the database
+			// Map them to the component's expected format
 			existing_months = months.map((m) => ({
 				id: m.id,
 				startDate: m.startDate,
 				endDate: m.endDate
 			}));
 
-			const latest = existing_months.reduce((latest, m) => (m.id > latest.id ? m : latest));
+			const latest = existing_months.reduce((latest, m) => (compareMonths(m.id, latest.id) > 0 ? m : latest));
 			current_month = latest.id;
 
 			oldest_loaded_timestamp = months[months.length - 1].startDate;
 			const older_check = await getMonthsBefore(household.id, oldest_loaded_timestamp, 1);
 			has_more_older_months = older_check.length > 0;
+		} catch (error) {
+			console.error('Failed to load months:', error);
+		} finally {
+			is_loading = false;
 		}
-
-		is_loading = false;
 	}
 
 	async function loadOlderMonths() {
@@ -110,14 +137,14 @@
 		const older_months = await getMonthsBefore(household.id, oldest_loaded_timestamp, 12);
 
 		if (older_months.length > 0) {
-			// Month IDs are now stored as YYYY-MM in the database (per spec)
+			// Month IDs are stored as householdId-YYYY-MM in the database
 			const mapped = older_months.map((m) => ({
 				id: m.id,
 				startDate: m.startDate,
 				endDate: m.endDate
 			}));
 
-			existing_months = [...existing_months, ...mapped].sort((a, b) => b.id.localeCompare(a.id));
+			existing_months = [...existing_months, ...mapped].sort((a, b) => compareMonths(b.id, a.id));
 			oldest_loaded_timestamp = older_months[older_months.length - 1].startDate;
 			has_more_older_months = older_months.length === 12;
 		} else {
@@ -153,10 +180,11 @@
 		const next_month_id = getNextMonthId(latest_month.id);
 		const { startDate, endDate } = calculateMonthDates(next_month_id, start_day);
 
-		await createMonth(household.id, startDate, endDate, latest_month.id);
+		const created = await createMonth(household.id, startDate, endDate, latest_month.id);
 		await loadMonths();
 
-		current_month = next_month_id;
+		// Use the created month's ID (which is the composite householdId-YYYY-MM)
+		current_month = created.id;
 	}
 </script>
 
