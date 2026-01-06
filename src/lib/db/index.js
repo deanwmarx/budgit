@@ -57,3 +57,15 @@ export {
 	getTotalBudgetProgress,
 	getMonthSavings
 } from './analytics.js';
+export {
+	generateBackup,
+	generateBackupFilename,
+	saveBackupToDevice,
+	createLocalBackup,
+	getBackupHistory,
+	readBackupFile,
+	listBackupFiles,
+	importBackup,
+	importBackupFromJson,
+	pickAndImportBackup
+} from './backup.js';

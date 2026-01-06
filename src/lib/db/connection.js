@@ -138,6 +138,22 @@ export async function initDB() {
 
 			CREATE INDEX IF NOT EXISTS idx_month_type ON transactions(monthId, type);
 			CREATE INDEX IF NOT EXISTS idx_month_deleted ON transactions(monthId, deletedAt);
+
+			CREATE TABLE IF NOT EXISTS sync_meta (
+				householdId TEXT PRIMARY KEY,
+				lastSyncedAt INTEGER DEFAULT 0,
+				lastSnapshotVersion INTEGER DEFAULT 0,
+				lastSnapshotAt INTEGER DEFAULT 0
+			);
+
+			CREATE TABLE IF NOT EXISTS backup_log (
+				id TEXT PRIMARY KEY,
+				deviceId TEXT NOT NULL,
+				timestamp INTEGER NOT NULL,
+				type TEXT NOT NULL,
+				location TEXT NOT NULL,
+				householdIds TEXT NOT NULL
+			);
         `);
 
 		console.log('Database initialized with notes table');

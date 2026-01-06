@@ -1,6 +1,12 @@
 <script>
 	import { appState } from '$lib/appState.svelte.js';
-	import { createUser, createHousehold, addMember, registerDevice } from '$lib/db';
+	import {
+		createUser,
+		createHousehold,
+		addMember,
+		registerDevice,
+		pickAndImportBackup
+	} from '$lib/db';
 	import { Device } from '@capacitor/device';
 	import { getMemberColors } from '$lib/utils/helpers';
 	import Button from '$comps/elements/buttons/Button.svelte';
@@ -8,6 +14,7 @@
 	import InputText from '$comps/elements/inputs/InputText.svelte';
 	import InputLabel from '$comps/elements/inputs/descriptors/InputLabel.svelte';
 	import InputSelect from '$comps/elements/inputs/InputSelect.svelte';
+	import InputOptions from '$comps/elements/inputs/InputOptions.svelte';
 	import MemberColor from '$comps/elements/members/MemberColor.svelte';
 	import { fade } from 'svelte/transition';
 
@@ -19,6 +26,15 @@
 	let mode = $derived(
 		has_user ? (has_households ? 'select-household' : 'create-household') : 'create-user'
 	);
+
+	// Household setup mode: 'create' or 'import'
+	/** @type {'create' | 'import'} */
+	let household_setup_mode = $state('create');
+
+	const household_setup_options = [
+		{ value: 'create', label: 'Create New', icon: 'plus' },
+		{ value: 'import', label: 'Import Backup', icon: 'file-import' }
+	];
 
 	// Reset loading when mode changes
 	$effect(() => {
@@ -48,6 +64,12 @@
 
 	let is_loading = $state(false);
 	let error = $state('');
+
+	// Import state
+	let is_importing = $state(false);
+	let import_message = $state('');
+	/** @type {'success' | 'error' | ''} */
+	let import_status = $state('');
 
 	// Get all member colors except neutrals
 	const color_options = getMemberColors()
@@ -191,6 +213,56 @@
 			is_loading = false;
 		}
 	}
+
+	async function handleImportBackup() {
+		if (is_importing) return;
+
+		is_importing = true;
+		import_message = '';
+		import_status = '';
+		error = '';
+
+		try {
+			const result = await pickAndImportBackup();
+
+			if (result.success) {
+				import_status = 'success';
+				const stats = result.stats;
+				if (stats) {
+					const parts = [];
+					if (stats.householdsImported) parts.push(`${stats.householdsImported} household(s)`);
+					if (stats.usersImported) parts.push(`${stats.usersImported} user(s)`);
+					if (stats.transactionsImported)
+						parts.push(`${stats.transactionsImported} transaction(s)`);
+					import_message = parts.length > 0 ? `Imported: ${parts.join(', ')}` : 'Import complete';
+				} else {
+					import_message = 'Import complete';
+				}
+
+				// Reload households from app state
+				await appState.loadHouseholds();
+
+				// If we now have households, the mode will automatically switch to select-household
+				if (appState.households.length > 0) {
+					// Give a moment to see the success message
+					setTimeout(() => {
+						// Mode will auto-switch due to reactive state
+					}, 1500);
+				}
+			} else if (result.error === 'Cancelled') {
+				// User cancelled, don't show error
+				import_status = '';
+			} else {
+				import_status = 'error';
+				error = result.error || 'Failed to import backup';
+			}
+		} catch (err) {
+			import_status = 'error';
+			error = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			is_importing = false;
+		}
+	}
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-grey-950 p-4">
@@ -331,93 +403,155 @@
 					</div>
 				</form>
 			{:else}
-				<!-- Create Household Form -->
-				<form
-					in:fade={{ duration: 150 }}
-					onsubmit={(e) => {
-						e.preventDefault();
-						handleCreateHousehold();
-					}}
-					class="space-y-6"
-				>
-					<div class="space-y-4">
-						<div class="space-y-1">
-							<InputLabel text="Household Name" required for="household" />
-							<InputText
-								id="household"
-								type="text"
-								bind:value={household_name}
-								placeholder="Enter a household name"
-								disabled={is_loading}
-								required
-							/>
-						</div>
+				<!-- Create/Import Household -->
+				<div in:fade={{ duration: 150 }} class="space-y-6">
+					<!-- Mode selector -->
+					<InputOptions options={household_setup_options} bind:value={household_setup_mode} />
 
-						<div class="space-y-1">
-							<InputLabel text="Budget Cycle Start Day" required for="budgetDay" />
-							<InputText
-								id="budgetDay"
-								type="number"
-								bind:value={budget_cycle_start_day}
-								placeholder="Enter the day your month starts (usually around payday)"
-								disabled={is_loading}
-								required
-							/>
-						</div>
-
-						<div class="space-y-1">
-							<InputLabel text="Your Color" required for="color" />
-							<div class="flex flex-wrap gap-2">
-								{#each color_options as color}
-									<button
-										type="button"
-										onclick={() => (member_color = color.value)}
-										class="scale-90 rounded-full border-2 transition-all {member_color ===
-										color.value
-											? 'scale-100 border-white'
-											: 'border-transparent'}"
+					{#if household_setup_mode === 'create'}
+						<!-- Create Household Form -->
+						<form
+							onsubmit={(e) => {
+								e.preventDefault();
+								handleCreateHousehold();
+							}}
+							class="space-y-6"
+						>
+							<div class="space-y-4">
+								<div class="space-y-1">
+									<InputLabel text="Household Name" required for="household" />
+									<InputText
+										id="household"
+										type="text"
+										bind:value={household_name}
+										placeholder="Enter a household name"
 										disabled={is_loading}
-										title={color.label}
-									>
-										<MemberColor color={color.color} class="size-8" />
-									</button>
-								{/each}
-							</div>
-						</div>
-					</div>
+										required
+									/>
+								</div>
 
-					{#if error}
-						<div class="text-red-400 rounded border border-red-500 bg-red-500/10 p-3 text-sm">
-							<div class="flex items-center gap-2">
-								<Icon name="exclamation-triangle" class="size-4" />
-								{error}
+								<div class="space-y-1">
+									<InputLabel text="Budget Cycle Start Day" required for="budgetDay" />
+									<InputText
+										id="budgetDay"
+										type="number"
+										bind:value={budget_cycle_start_day}
+										placeholder="Enter the day your month starts (usually around payday)"
+										disabled={is_loading}
+										required
+									/>
+								</div>
+
+								<div class="space-y-1">
+									<InputLabel text="Your Colour" required for="color" />
+									<div class="flex flex-wrap gap-2">
+										{#each color_options as color}
+											<button
+												type="button"
+												onclick={() => (member_color = color.value)}
+												class="scale-90 rounded-full border-2 transition-all {member_color ===
+												color.value
+													? 'scale-100 border-white'
+													: 'border-transparent'}"
+												disabled={is_loading}
+												title={color.label}
+											>
+												<MemberColor color={color.color} class="size-8" />
+											</button>
+										{/each}
+									</div>
+								</div>
 							</div>
+
+							{#if error}
+								<div class="text-red-400 rounded border border-red-500 bg-red-500/10 p-3 text-sm">
+									<div class="flex items-center gap-2">
+										<Icon name="exclamation-triangle" class="size-4" />
+										{error}
+									</div>
+								</div>
+							{/if}
+
+							<div
+								class="flex flex-nowrap gap-2 {!has_households ? 'justify-end' : 'justify-between'}"
+							>
+								{#if has_households}
+									<Button
+										type="button"
+										color="secondary"
+										onclick={() => (mode = 'select-household')}
+										disabled={is_loading}
+									>
+										<Icon name="arrow-left" class="size-5" />
+										Back
+									</Button>
+								{/if}
+								<Button type="submit" color="primary" disabled={is_loading}>
+									{#if is_loading}
+										Creating household...
+										<Icon name="spinner" class="size-5 animate-spin" />
+									{:else}
+										Get Started
+										<Icon name="arrow-right" class="size-5" />
+									{/if}
+								</Button>
+							</div>
+						</form>
+					{:else}
+						<!-- Import Backup -->
+						<div class="space-y-4">
+							<p class="text-gray-400 text-sm">
+								Import data from a backup file. Select a JSON backup file from your device.
+							</p>
+
+							<div class="flex gap-2">
+								<Button
+									onclick={handleImportBackup}
+									disabled={is_importing}
+									color="primary"
+									class="flex-1"
+								>
+									{#if is_importing}
+										Importing...
+										<Icon name="spinner" class="size-5 animate-spin" />
+									{:else}
+										Select Backup File
+									{/if}
+								</Button>
+							</div>
+
+							{#if import_status === 'success'}
+								<div class="bg-green-900/30 rounded-lg p-3">
+									<p class="text-green-400 text-sm font-medium">✓ {import_message}</p>
+									<p class="mt-1 text-xs text-green-500">Redirecting to household selection...</p>
+								</div>
+							{/if}
+
+							{#if error}
+								<div class="text-red-400 rounded border border-red-500 bg-red-500/10 p-3 text-sm">
+									<div class="flex items-center gap-2">
+										<Icon name="exclamation-triangle" class="size-4" />
+										{error}
+									</div>
+								</div>
+							{/if}
+
+							{#if has_households}
+								<div class="flex justify-start">
+									<Button
+										type="button"
+										color="secondary"
+										onclick={() => (mode = 'select-household')}
+										disabled={is_importing}
+									>
+										<Icon name="arrow-left" class="size-5" />
+										Back
+									</Button>
+								</div>
+							{/if}
 						</div>
 					{/if}
-
-					<div class="flex flex-nowrap gap-2 {!has_households ? 'justify-end' : 'justify-between'}">
-						{#if has_households}
-							<Button
-								type="button"
-								color="secondary"
-								onclick={() => (mode = 'select-household')}
-								disabled={is_loading}
-							>
-								<Icon name="arrow-left" class="size-5" />
-								Back
-							</Button>
-						{/if}
-						<Button type="submit" color="primary" disabled={is_loading}>
-							{#if is_loading}
-								Creating household...
-								<Icon name="spinner" class="size-5 animate-spin" />
-							{:else}
-								Get Started
-								<Icon name="arrow-right" class="size-5" />
-							{/if}
-						</Button>
-					</div>
-				</form>
+				</div>
 			{/if}
 		</div>
 	</div>

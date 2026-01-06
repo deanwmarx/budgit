@@ -30,14 +30,16 @@
 	},
 	"dependencies": {
 		"@capacitor-community/sqlite": "^7.0.2",
-		"@capacitor/android": "^7.4.3",
-		"@capacitor/app": "^7.1.0",
-		"@capacitor/cli": "^7.4.3",
-		"@capacitor/core": "^7.4.3",
-		"@capacitor/device": "^7.0.2",
-		"@capacitor/haptics": "^7.0.2",
-		"@capacitor/preferences": "^7.0.2",
-		"@capacitor/splash-screen": "^7.0.3",
-		"@capawesome/capacitor-android-edge-to-edge-support": "^7.2.3"
+		"@capacitor/android": "^8.0.0",
+		"@capacitor/app": "^8.0.0",
+		"@capacitor/cli": "^8.0.0",
+		"@capacitor/core": "^8.0.0",
+		"@capacitor/device": "^8.0.0",
+		"@capacitor/filesystem": "^8.0.0",
+		"@capacitor/haptics": "^8.0.0",
+		"@capacitor/preferences": "^8.0.0",
+		"@capacitor/splash-screen": "^8.0.0",
+		"@capawesome/capacitor-android-edge-to-edge-support": "^8.0.2",
+		"@capawesome/capacitor-file-picker": "^8.0.0"
 	}
 }

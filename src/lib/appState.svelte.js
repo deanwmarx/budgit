@@ -203,6 +203,20 @@ class AppState {
 	}
 
 	/**
+	 * Reload households for the current user (useful after import)
+	 */
+	async loadHouseholds() {
+		if (!this.current_user_id) return;
+
+		const households = await getUserHouseholds(this.current_user_id);
+		this.households = households.map((h) => ({
+			id: h.id,
+			name: h.name,
+			role: h.role
+		}));
+	}
+
+	/**
 	 * Set the current household and save to preferences
 	 * @param {string} household_id
 	 * @param {string} household_name
