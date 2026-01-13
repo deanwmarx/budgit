@@ -14,6 +14,7 @@
 	let actual_savings_panel_open = $state(false);
 	let salary_income_panel_open = $state(false);
 	let onceoff_income_panel_open = $state(false);
+	let interest_income_panel_open = $state(false);
 	let fixed_expenses_panel_open = $state(false);
 	let variable_expenses_panel_open = $state(false);
 	let incidental_expenses_panel_open = $state(false);
@@ -28,6 +29,7 @@
 	// incomes state
 	let salary_incomes = $state('');
 	let onceoff_incomes = $state('');
+	let interest_incomes = $state('');
 	let total_incomes = $state('');
 
 	// expenses state
@@ -56,6 +58,7 @@
 			actual_savings = 'R 0.00';
 			salary_incomes = '';
 			onceoff_incomes = '';
+			interest_incomes = '';
 			total_incomes = '';
 			fixed_expenses = '';
 			variable_expenses = '';
@@ -88,6 +91,10 @@
 					position: 'prefix'
 				});
 				onceoff_incomes = formatCurrency(incomes_result.oneTime, {
+					currency: 'R',
+					position: 'prefix'
+				});
+				interest_incomes = formatCurrency(incomes_result.interest, {
 					currency: 'R',
 					position: 'prefix'
 				});
@@ -154,18 +161,24 @@
 	</DashboardAccordion>
 
 	<DashboardAccordion is_open={false} title={`Incomes ${total_incomes ? `- ${total_incomes}` : 'R 0'} total`}>
-		<div class="flex gap-4">
+		<div class="flex flex-wrap justify-center gap-4">
 			<button
-				class="flex-1 appearance-none outline-0"
+				class="w-[calc(50%-0.5rem)] appearance-none outline-0"
 				onclick={() => (salary_income_panel_open = true)}
 			>
 				<MetricAmount amount={salary_incomes} label="Salary" icon="calendar-range" />
 			</button>
 			<button
-				class="flex-1 appearance-none outline-0"
+				class="w-[calc(50%-0.5rem)] appearance-none outline-0"
 				onclick={() => (onceoff_income_panel_open = true)}
 			>
 				<MetricAmount amount={onceoff_incomes} label="Once-off" icon="money" />
+			</button>
+			<button
+				class="w-[calc(50%-0.5rem)] appearance-none outline-0"
+				onclick={() => (interest_income_panel_open = true)}
+			>
+				<MetricAmount amount={interest_incomes} label="Interest" icon="percent" />
 			</button>
 		</div>
 	</DashboardAccordion>
@@ -240,6 +253,18 @@
 		<p class="leading-5">
 			Once-off income includes any irregular or unexpected earnings, such as bonuses, gifts, or
 			selling personal items.
+		</p>
+	</div>
+</Modal>
+
+<Modal bind:is_active={interest_income_panel_open}>
+	<div class="space-y-4">
+		<div class="flex items-center gap-2">
+			<Icon name="info" class="size-6" />
+			<h2 class="text-lg leading-none font-medium">Interest Income</h2>
+		</div>
+		<p class="leading-5">
+			Interest income includes earnings from interest on savings, investments or other financial products.
 		</p>
 	</div>
 </Modal>

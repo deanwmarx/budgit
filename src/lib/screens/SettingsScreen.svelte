@@ -53,23 +53,34 @@
 			budget_danger_threshold !== original_budget_danger_threshold
 	);
 
+	const current_household_id = $derived(appState.current_household_id);
+
 	onMount(async () => {
-		if (!appState.current_household_id) return;
-		household = await getHousehold(appState.current_household_id);
-		if (household) {
-			household_name = household.name;
-			budget_cycle_start_day = household.budgetCycleStartDay;
-			budget_warning_threshold = household.budgetWarningThreshold;
-			budget_danger_threshold = household.budgetDangerThreshold;
-
-			original_household_name = household.name;
-			original_budget_cycle_start_day = household.budgetCycleStartDay;
-			original_budget_warning_threshold = household.budgetWarningThreshold;
-			original_budget_danger_threshold = household.budgetDangerThreshold;
-		}
-
 		// Load backup history
 		backup_history = await getBackupHistory(5);
+	});
+
+	// Reload household settings when household changes
+	$effect(() => {
+		current_household_id;
+
+		untrack(async () => {
+			if (current_household_id) {
+				const result = await getHousehold(current_household_id);
+				if (result) {
+					household = result;
+					household_name = result.name;
+					budget_cycle_start_day = result.budgetCycleStartDay;
+					budget_warning_threshold = result.budgetWarningThreshold;
+					budget_danger_threshold = result.budgetDangerThreshold;
+
+					original_household_name = result.name;
+					original_budget_cycle_start_day = result.budgetCycleStartDay;
+					original_budget_warning_threshold = result.budgetWarningThreshold;
+					original_budget_danger_threshold = result.budgetDangerThreshold;
+				}
+			}
+		});
 	});
 
 	$effect(() => {
@@ -77,6 +88,40 @@
 
 		untrack(() => {
 			updateHeaderMode();
+		});
+	});
+
+	$effect(() => {
+		// Ensure thresholds are within 0-100 and that warning < danger (strict)
+		budget_warning_threshold;
+		budget_danger_threshold;
+
+		untrack(() => {
+			let w = Number(budget_warning_threshold ?? 1);
+			let d = Number(budget_danger_threshold ?? 2);
+
+			// Clamp warning to 1..100 and danger to 0..100 initially
+			w = Math.max(1, Math.min(100, w));
+			d = Math.max(0, Math.min(100, d));
+
+			// Ensure strict inequality w < d
+			if (w >= d) {
+				// Prefer lowering warning to d - 1 if that keeps it >= 1
+				if (d - 1 >= 1) {
+					const newW = d - 1;
+					if (budget_warning_threshold !== newW) budget_warning_threshold = newW;
+					return;
+				}
+
+				// Otherwise, raise danger to w + 1 (clamped to 100)
+				const newD = Math.min(100, w + 1);
+				if (budget_danger_threshold !== newD) budget_danger_threshold = newD;
+				return;
+			}
+
+			// apply clamped values if changed
+			if (budget_warning_threshold !== w) budget_warning_threshold = w;
+			if (budget_danger_threshold !== d) budget_danger_threshold = d;
 		});
 	});
 
@@ -251,11 +296,17 @@
 		</div>
 		<div class="space-y-1">
 			<InputLabel text="Budget Warning Threshold" for="warning-threshold" />
-			<InputSlider bind:value={budget_warning_threshold} variant="warning" />
+			<InputSlider
+				bind:value={budget_warning_threshold}
+				variant="warning"
+			/>
 		</div>
 		<div class="space-y-1">
 			<InputLabel text="Budget Danger Threshold" for="danger-threshold" />
-			<InputSlider bind:value={budget_danger_threshold} variant="danger" />
+			<InputSlider
+				bind:value={budget_danger_threshold}
+				variant="danger"
+			/>
 		</div>
 	</Accordion>
 

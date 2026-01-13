@@ -92,6 +92,14 @@
 		};
 	});
 
+	// Reset current_month when layout hides (logout) so it properly triggers on re-login
+	$effect(() => {
+		if (!show_layout) {
+			current_month = '';
+		}
+	});
+
+	// Sync current_month to appState
 	$effect(() => {
 		appState.current_month_id = current_month;
 	});
@@ -184,7 +192,7 @@
 							<Icon name="sliders" class="size-4" />
 							Budgets
 						</button>
-						<button
+						<!-- <button
 							onclick={() => navigate(SCREENS.COMPONENTS)}
 							class="flex w-full items-center gap-2 px-4 py-1.5 text-left transition-colors duration-300 active:bg-grey-800 {navigation.current_screen ===
 							SCREENS.COMPONENTS
@@ -193,7 +201,7 @@
 						>
 							<Icon name="building-blocks" class="size-4" />
 							Components
-						</button>
+						</button> -->
 					</div>
 				</div>
 				<div>

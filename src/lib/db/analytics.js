@@ -5,16 +5,17 @@ import { getDB } from './connection.js';
 /**
  * Get total income breakdown for a month.
  * @param {string} month_id - The month ID
- * @returns {Promise<{salary: number, oneTime: number, total: number}>} Income breakdown
+ * @returns {Promise<{salary: number, oneTime: number, interest: number, total: number}>} Income breakdown
  */
 export async function getMonthIncomes(month_id) {
 	const db = getDB();
-	if (!db) return { salary: 0, oneTime: 0, total: 0 };
+	if (!db) return { salary: 0, oneTime: 0, interest: 0, total: 0 };
 
 	const result = await db.query(
 		`SELECT 
 			SUM(CASE WHEN category = 'salary' THEN amount ELSE 0 END) as salary,
 			SUM(CASE WHEN category = 'one_time' THEN amount ELSE 0 END) as oneTime,
+			SUM(CASE WHEN category = 'interest' THEN amount ELSE 0 END) as interest,
 			SUM(amount) as total
 		FROM transactions 
 		WHERE monthId = ? AND type = 'income' AND deletedAt IS NULL`,
@@ -25,6 +26,7 @@ export async function getMonthIncomes(month_id) {
 	return {
 		salary: row?.salary || 0,
 		oneTime: row?.oneTime || 0,
+		interest: row?.interest || 0,
 		total: row?.total || 0
 	};
 }

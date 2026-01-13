@@ -93,6 +93,7 @@
 		bind:this={input}
 		{placeholder}
 		{disabled}
+		{...rest}
 	/>
 	{#if currency_position === 'suffix'}
 		<span class="text-grey-300">{currency}</span>

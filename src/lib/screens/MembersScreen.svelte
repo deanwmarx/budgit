@@ -12,7 +12,7 @@
 	import { navigation } from '$lib/navigation.svelte.js';
 	import { getMembers, updateMember, inviteMember, removeMember } from '$lib/db';
 	import { getMemberColors, formatRelativeDate } from '$lib/utils/helpers';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import Modal from '$comps/groups/Modal.svelte';
 
 	let members = $state([]);
@@ -49,18 +49,18 @@
 		}));
 
 	onMount(async () => {
-		members = await getMembers(current_household_id);
 		updateHeaderMode();
 	});
 
+	// Reload members when household changes
 	$effect(() => {
 		current_household_id;
 
-		// Reload members when household changes
-		onMount(async () => {
-			members = await getMembers(current_household_id);
-			selected_members = [];
-			updateHeaderMode();
+		untrack(async () => {
+			if (current_household_id) {
+				members = await getMembers(current_household_id);
+				selected_members = [];
+			}
 		});
 	});
 

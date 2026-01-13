@@ -119,7 +119,7 @@ export async function initDB() {
 				name TEXT NOT NULL,
 				amount INTEGER NOT NULL CHECK (amount >= 0),
 				category TEXT NOT NULL CHECK(
-					(type = 'income' AND category IN ('salary', 'one_time')) OR
+					(type = 'income' AND category IN ('salary', 'one_time', 'interest')) OR
 					(type = 'expense' AND category IN ('fixed', 'variable', 'incidental'))
 				),
 				budgetGroup TEXT CHECK(

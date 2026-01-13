@@ -6,7 +6,6 @@
 		getTransactions,
 		updateTransaction,
 		deleteTransaction,
-		getBudget,
 		getBudgets,
 		getMembers
 	} from '$lib/db';
@@ -41,7 +40,8 @@
 
 	const income_category_options = [
 		{ value: 'salary', label: 'Salary', icon: 'wallet' },
-		{ value: 'one_time', label: 'Once-off', icon: 'money' }
+		{ value: 'one_time', label: 'Once-off', icon: 'money' },
+		{ value: 'interest', label: 'Interest', icon: 'percent' }
 	];
 
 	// Filter options
@@ -57,7 +57,8 @@
 		{ value: 'incidental', label: 'Incidental' },
 		{ value: 'fixed', label: 'Fixed' },
 		{ value: 'salary', label: 'Salary' },
-		{ value: 'one_time', label: 'Once-off' }
+		{ value: 'one_time', label: 'Once-off' },
+		{ value: 'interest', label: 'Interest' }
 	];
 
 	const expense_category_filter_options = [
@@ -70,7 +71,8 @@
 	const income_category_filter_options = [
 		{ value: '', label: 'All' },
 		{ value: 'salary', label: 'Salary' },
-		{ value: 'one_time', label: 'Once-off' }
+		{ value: 'one_time', label: 'Once-off' },
+		{ value: 'interest', label: 'Interest' }
 	];
 
 	let transactions = $state(/** @type {any[]} */ ([]));
@@ -84,7 +86,9 @@
 	// Filter state
 	let filter_type = $state(/** @type {'' | 'expense' | 'income'} */ (''));
 	let filter_category = $state(
-		/** @type {'' | 'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary'} */ ('')
+		/** @type {'' | 'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary' | 'interest'} */ (
+			''
+		)
 	);
 
 	// Derived category filter options based on selected type
@@ -110,7 +114,9 @@
 	/** @type {'expense' | 'income'} */
 	let transaction_type = $state(/** @type {'expense' | 'income'} */ ('expense'));
 	let transaction_category = $state(
-		/** @type {'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary' } */ ('variable')
+		/** @type {'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary' | 'interest' } */ (
+			'variable'
+		)
 	);
 	let transaction_budget_group = $state('');
 	let transaction_who = $state('');
@@ -123,7 +129,9 @@
 	/** @type {'expense' | 'income'} */
 	let new_transaction_type = $state(/** @type {'expense' | 'income'} */ ('expense'));
 	let new_transaction_category = $state(
-		/** @type {'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary'} */ ('variable')
+		/** @type {'variable' | 'incidental' | 'fixed' | 'one_time' | 'salary' | 'interest'} */ (
+			'variable'
+		)
 	);
 	let new_transaction_budget_group = $state('');
 	let new_transaction_who = $state('');
@@ -149,43 +157,40 @@
 	const current_household_id = $derived(appState.current_household_id);
 
 	onMount(async () => {
-		if (current_month_id) {
-			transactions = await getTransactions(current_month_id);
-
-			budgets = await getBudgets(current_month_id);
-			budgets = budgets.map((b) => ({
-				...b,
-				label: b.groupName,
-				value: b.id
-			}));
-		}
-
-		if (current_household_id) {
-			const result = await getMembers(current_household_id);
-			members = result.map((m) => ({
-				...m,
-				label: m.name,
-				value: m.userId
-			}));
-		}
-
 		updateHeaderMode();
 	});
 
-	// Reload transactions when month changes
+	// Reload transactions and budgets when month changes
 	$effect(() => {
-		if (current_month_id) {
-			getTransactions(current_month_id).then((result) => {
-				transactions = result;
-			});
-			getBudgets(current_month_id).then((result) => {
-				budgets = result.map((b) => ({
+		current_month_id;
+
+		untrack(async () => {
+			if (current_month_id) {
+				transactions = await getTransactions(current_month_id);
+				const budgetResults = await getBudgets(current_month_id);
+				budgets = budgetResults.map((b) => ({
 					...b,
 					label: b.groupName,
 					value: b.id
 				}));
-			});
-		}
+			}
+		});
+	});
+
+	// Reload members when household changes
+	$effect(() => {
+		current_household_id;
+
+		untrack(async () => {
+			if (current_household_id) {
+				const result = await getMembers(current_household_id);
+				members = result.map((m) => ({
+					...m,
+					label: m.name,
+					value: m.userId
+				}));
+			}
+		});
 	});
 
 	$effect(() => {
@@ -270,7 +275,12 @@
 		new_transaction_category = 'variable';
 		new_transaction_budget_group = '';
 		new_transaction_who = '';
-		new_transaction_when = '';
+		// Default the date to today's date (local) in YYYY-MM-DD format
+		const _today = new Date();
+		const _yyyy = _today.getFullYear();
+		const _mm = String(_today.getMonth() + 1).padStart(2, '0');
+		const _dd = String(_today.getDate()).padStart(2, '0');
+		new_transaction_when = `${_yyyy}-${_mm}-${_dd}`;
 		new_transaction_amount = 0;
 		new_transaction_created_by = appState.current_user_id || '';
 
@@ -333,7 +343,11 @@
 
 		// Budget validation
 		if (budget_required && !transaction_budget_group) {
-			setError('budget', 'Budget is required for variable expenses.');
+			const budget_msg =
+				budgets.length === 0
+					? 'No budgets yet — add one in Budgets (required for variable expenses).'
+					: 'Budget is required for variable expenses.';
+			setError('budget', budget_msg);
 			return;
 		}
 
@@ -376,7 +390,11 @@
 
 		// Budget validation (manual, shown alongside other errors)
 		if (budget_required && !new_transaction_budget_group) {
-			setError('budget', 'Budget is required for variable expenses.');
+			const budget_msg =
+				budgets.length === 0
+					? 'No budgets yet — add one in Budgets (required for variable expenses).'
+					: 'Budget is required for variable expenses.';
+			setError('budget', budget_msg);
 		}
 
 		// Return if any validation failed

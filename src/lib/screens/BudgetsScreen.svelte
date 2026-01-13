@@ -22,7 +22,7 @@
 	let add_sheet_open = $state(false);
 	let delete_panel_open = $state(false);
 	let selected_budgets = $state(/** @type {string[]} */ ([]));
-	let selected_budget = $state(null);
+	let selected_budget = $state(/** @type {any} */ (null));
 	let is_loading = $state(false);
 
 	// Edit form fields
@@ -36,9 +36,15 @@
 	let new_budget_amount = $state(0);
 
 	// Add form validation
-	const { errors, validate, setError, clearError } = createValidator({
+	const { errors, validate, setError, clearError, clear } = createValidator({
 		name: [required('Budget name is required.')],
 		amount: [required('Amount is required.')]
+	});
+
+	// Ensure validation errors are cleared when the add sheet is closed
+	$effect(() => {
+		add_sheet_open;
+		if (!add_sheet_open) clear();
 	});
 
 	const current_month_id = $derived(appState.current_month_id);
@@ -50,12 +56,10 @@
 	);
 
 	onMount(async () => {
-		if (current_month_id) {
-			budgets = await getBudgetsWithUsage(current_month_id);
-		}
 		updateHeaderMode();
 	});
 
+	// Reload budgets when month changes
 	$effect(() => {
 		current_month_id;
 
@@ -90,6 +94,9 @@
 		new_budget_group_name = '';
 		new_budget_amount = 0;
 
+		// clear any previous validation errors
+		clear();
+
 		// open sheet
 		add_sheet_open = true;
 	}
@@ -108,12 +115,10 @@
 	}
 
 	async function handleUpdateBudget() {
-		if (!selected_budget || !current_month_id) return;
-
 		try {
 			is_loading = true;
 
-			await updateBudget(selected_budget.id, budget_amount);
+			await updateBudget(selected_budget.id, budget_group_name, budget_amount);
 
 			budgets = await getBudgetsWithUsage(current_month_id);
 			edit_sheet_open = false;

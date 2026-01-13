@@ -260,15 +260,15 @@ export async function addBudget(month_id, group_name, amount) {
  * @param {number} amount - The new budget amount (in cents)
  * @returns {Promise<void>}
  */
-export async function updateBudget(budget_id, amount) {
+export async function updateBudget(budget_id, group_name, amount) {
 	const db = getDB();
 	if (!db) throw new Error('Database not initialized');
 
 	const updated_at = Date.now();
 
 	const result = await db.run(
-		'UPDATE budgets SET amount = ?, updatedAt = ? WHERE id = ?',
-		[amount, updated_at, budget_id]
+		'UPDATE budgets SET groupName = ?, amount = ?, updatedAt = ? WHERE id = ?',
+		[group_name, amount, updated_at, budget_id]
 	);
 
 	if (result.changes === 0) {

@@ -39,6 +39,8 @@ class NavigationState {
 	 * @param {ScreenType} screen - The screen to navigate to
 	 */
 	navigateTo(screen) {
+		// If navigating to the same screen, do nothing (don't reset header mode)
+		if (screen === this.current_screen) return;
 		this.history.push(this.current_screen);
 		this.current_screen = screen;
 		// Reset header when navigating

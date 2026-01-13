@@ -23,7 +23,7 @@
 	 * @property {string} title - Transaction title
 	 * @property {Amount} amount - Transaction amount
 	 * @property {string} date - Transaction date
-	 * @property {'variable' | 'fixed' | 'incidental' | 'one-time' | 'salary'} category - Transaction category
+	 * @property {'variable' | 'fixed' | 'incidental' | 'one_time' | 'salary' | 'interest'} category - Transaction category
 	 * @property {'income' | 'expense'} type - Transaction type
 	 * @property {Member} member - Transaction member
 	 * @property {boolean} [is_selected] - Whether the card is selected
@@ -50,8 +50,19 @@
 		variable: 'arrows-up-down',
 		fixed: 'lock',
 		incidental: 'exclamation-triangle',
-		'one-time': 'calendar-days',
-		salary: 'money'
+		one_time: 'money',
+		salary: 'calendar-range',
+		interest: 'percent'
+	};
+
+	// Human-friendly labels for categories (fixes underscore -> readable label)
+	const CATEGORY_LABELS = {
+		variable: 'Variable',
+		fixed: 'Fixed',
+		incidental: 'Incidental',
+		one_time: 'Once-off',
+		salary: 'Salary',
+		interest: 'Interest'
 	};
 
 	const formatted_date = $derived(formatRelativeDate(date));
@@ -108,7 +119,7 @@
 			<span class="line-clamp-2 text-left text-lg leading-5">{title}</span>
 			<Badge>
 				<Icon name={CATEGORY_ICONS[category]} class="size-4" />
-				<span class="leading-none capitalize">{category}</span>
+				<span class="leading-none">{CATEGORY_LABELS[category]}</span>
 			</Badge>
 		</div>
 		<div class="flex items-end justify-between gap-2">
