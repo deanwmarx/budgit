@@ -1,38 +1,62 @@
-# sv
+# Budgit
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A household budget tracker for tracking income and expenses, comparing them against monthly budgets, and visualizing spending through analytics. Built with SvelteKit and Capacitor, using local SQLite storage.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Households & members** – multiple users can belong to a household, each assigned a role and colour
+- **Monthly cycles** – budgets and transactions are scoped to custom monthly periods with a configurable start day
+- **Budgets by group** – set spending limits per budget group (e.g. groceries, transport) for each month
+- **Transactions** – track income (salary, one-time, interest) and expenses (fixed, variable, incidental), linked to a budget group where relevant
+- **Budget thresholds** – configurable warning (default 75%) and danger (default 90%) thresholds to flag overspending
+- **Analytics** – compare total income vs expenses, and track budget usage per group, per month
+- **Device tracking** – tracks last active device for sync/backup purposes
+- **Backups** – logs backup events with type, location, and affected households
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Stack
 
-# create a new project in my-app
-npx sv create my-app
+- **SvelteKit** – app framework
+- **Tailwind CSS** – styling
+- **Capacitor** – native mobile runtime (Android)
+- **@capacitor-community/sqlite** – local database storage
+- **@capacitor/filesystem** + **@capawesome/capacitor-file-picker** – file import/export
+- **@capacitor/preferences** – local key-value storage
+- **@capacitor/haptics** – tactile feedback
+- **@capawesome/capacitor-android-edge-to-edge-support** – edge-to-edge Android UI
+
+## Getting started
+
+```bash
+npm install
 ```
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+```bash
 npm run dev
 
-# or start the server and open the app in a new browser tab
+# or open in browser automatically
 npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
-
-```sh
+```bash
 npm run build
+npm run preview
 ```
 
-You can preview the production build with `npm run preview`.
+## Mobile (Android)
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```bash
+npx cap sync android
+npx cap open android
+```
+
+## Code quality
+
+```bash
+npm run check       # type checking
+npm run format       # format with Prettier
+npm run lint         # check formatting
+```
